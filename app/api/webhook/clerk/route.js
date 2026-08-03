@@ -53,7 +53,7 @@ export async function POST(req) {
 
     const email = data.email_addresses?.[0]?.email_address || "";
     const ADMIN_EMAILS = ["titaniumchinzo@gmail.com"];
-    const role = ADMIN_EMAILS.includes(email) ? "admin" : "student";
+    const role = ADMIN_EMAILS.includes(email.trim().toLowerCase()) ? "admin" : "student";
 
     await User.findOneAndUpdate(
       { clerkId: data.id },
