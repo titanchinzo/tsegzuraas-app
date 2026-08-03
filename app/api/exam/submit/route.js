@@ -4,7 +4,7 @@ import Score from "@/models/Score";
 import { aggregateExamAttempts } from "@/lib/scoring";
 
 // POST /api/exam/submit
-// Body: { type: "write"|"listen", attempts: [{ accuracy, wpm, correct, errors, total, durationSeconds }, ...] (8ш) }
+// Body: { type: "write"|"listen", attempts: [{ accuracy, wpm, correct, errors, total, durationSeconds }, ...] (5ш) }
 // Зөвхөн Student эрхтэй хэрэглэгч шалгалт өгнө (spec: Write/Listen Шалгалт - Student only).
 export async function POST(req) {
   const user = await getCurrentUser();
@@ -20,7 +20,7 @@ export async function POST(req) {
 
   const { type, attempts } = await req.json();
   if (!["write", "listen"].includes(type) || !Array.isArray(attempts) || attempts.length === 0) {
-    return Response.json({ error: "type, attempts (8 удаагийн) шаардлагатай" }, { status: 400 });
+    return Response.json({ error: "type, attempts (5 удаагийн) шаардлагатай" }, { status: 400 });
   }
 
   const { score, accuracy, wpm } = aggregateExamAttempts(attempts);

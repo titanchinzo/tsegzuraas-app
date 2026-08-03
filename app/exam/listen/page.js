@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import ListenTrainer from "@/components/ListenTrainer";
 import ResultPanel from "@/components/ResultPanel";
 
-const TOTAL_ROUNDS = 8;
+const TOTAL_ROUNDS = 5;
 
 export default function ListenExamPage() {
   const [roundIndex, setRoundIndex] = useState(0);

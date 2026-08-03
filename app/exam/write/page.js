@@ -5,7 +5,7 @@ import WriteTrainer from "@/components/WriteTrainer";
 import ResultPanel from "@/components/ResultPanel";
 import { aggregateExamAttempts } from "@/lib/scoring";
 
-const TOTAL_ROUNDS = 8;
+const TOTAL_ROUNDS = 5;
 
 export default function WriteExamPage() {
   const [roundIndex, setRoundIndex] = useState(0);

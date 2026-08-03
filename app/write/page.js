@@ -50,9 +50,11 @@ export default function WritePracticePage() {
       <ResultPanel result={result} />
 
       {result && (
-        <button onClick={loadNext} className="btn-primary">
-          Дараагийн дадлага →
-        </button>
+        <div className="flex justify-center">
+          <button onClick={loadNext} className="btn-accent !rounded-full !px-8">
+            Дараагийн дадлага →
+          </button>
+        </div>
       )}
     </div>
   );
