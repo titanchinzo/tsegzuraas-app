@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { randomChars, REVERSE_MORSE_MAP } from "@/lib/morse";
-import { PenTool, RotateCcw, ArrowRight, Minus, Circle } from "lucide-react";
+import { PenTool, RotateCcw, ArrowRight, Minus, Circle, Check, X } from "lucide-react";
 import Link from "next/link";
 
 const ROUND_SIZE = 5;
@@ -166,10 +166,23 @@ export default function WritePracticePage() {
                 return (
                   <div
                     key={i}
-                    className={`flex h-14 w-14 items-center justify-center rounded-lg border-2 text-xl font-bold transition-all ${cls}`}
+                    className={`relative flex h-14 w-14 items-center justify-center rounded-lg border-2 text-xl font-bold transition-all ${cls}`}
                   >
                     {results[i] ? (
-                      <span>{c}</span>
+                      <>
+                        <span>{c}</span>
+                        <span
+                          className={`absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full text-white ${
+                            results[i].correct ? "bg-green-500" : "bg-red-500"
+                          }`}
+                        >
+                          {results[i].correct ? (
+                            <Check className="h-3 w-3" strokeWidth={3} />
+                          ) : (
+                            <X className="h-3 w-3" strokeWidth={3} />
+                          )}
+                        </span>
+                      </>
                     ) : (
                       <span className="text-sm">{i + 1}</span>
                     )}
