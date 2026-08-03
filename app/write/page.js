@@ -193,6 +193,16 @@ export default function WritePracticePage() {
 
             {!roundComplete && (
               <div className="flex flex-col items-center gap-4">
+                {/* Кодлох тэмдэгт — үсэг/тоог харуулна, гэхдээ хариулт (морз код) нуугдмал */}
+                <div className="flex flex-col items-center gap-1 bg-brand-darker rounded-2xl px-10 py-4 min-w-[180px]">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                    Кодлох тэмдэгт
+                  </span>
+                  <p className="text-4xl font-mono font-bold text-white leading-tight">
+                    {chars[currentCharIndex]}
+                  </p>
+                </div>
+
                 {/* Одоогийн морз бичлэг */}
                 <div className="flex h-12 min-w-[120px] items-center justify-center rounded-lg border border-surface bg-white px-4">
                   <span className="font-mono text-2xl tracking-widest text-brand-darker">
@@ -200,7 +210,7 @@ export default function WritePracticePage() {
                   </span>
                 </div>
 
-                {/* Хүлээгдэж буй морз ЗААГДАХГҮЙ — anti-cheat */}
+                {/* Хүлээгдэж буй морзын КОД (жиш нь ".-.") ЗААГДАХГҮЙ — anti-cheat */}
 
                 <div className="flex items-center gap-4">
                   <button
