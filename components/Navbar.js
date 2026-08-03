@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   SignedIn,
   SignedOut,
@@ -18,8 +20,24 @@ const NAV_LINKS = [
   { href: "/score", label: "Score" },
 ];
 
+function Logo() {
+  return (
+    <Link href="/" className="flex items-center gap-2 shrink-0">
+      <span className="flex items-center gap-1">
+        <span className="h-2 w-2 rounded-full bg-accent" />
+        <span className="h-2 w-4 rounded-full bg-accent" />
+      </span>
+      <span className="text-lg font-bold tracking-wide text-white">
+        tsegzuraas<span className="text-accent">.mn</span>
+      </span>
+    </Link>
+  );
+}
+
 export default function Navbar() {
   const { role } = useCurrentUser();
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   const links = [
     ...NAV_LINKS,
@@ -35,33 +53,86 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="bg-brand-darker text-white">
-      <div className="container-page flex items-center justify-between py-4">
-        <Link href="/" className="text-xl font-bold tracking-wide">
-          tsegzuraas.mn
-        </Link>
+    <header className="sticky top-0 z-40 bg-brand-darker/95 backdrop-blur text-white shadow-soft">
+      <div className="container-page flex items-center justify-between py-3.5">
+        <Logo />
 
-        <nav className="hidden md:flex gap-6 text-sm">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-surface">
-              {link.label}
-            </Link>
-          ))}
+        <nav className="hidden lg:flex items-center gap-1 text-sm">
+          {links.map((link) => {
+            const active = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-3 py-1.5 rounded-full transition-colors duration-150 ${
+                  active
+                    ? "bg-white/10 text-white font-medium"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
-        <div>
+        <div className="flex items-center gap-3">
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="bg-brand-dark px-4 py-1.5 rounded-md text-sm hover:bg-brand-darker border border-white/20">
-                Login
-              </button>
+              <button className="btn-accent !px-4 !py-1.5 text-sm">Login</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
             <UserButton afterSignOutUrl="/" />
           </SignedIn>
+
+          <button
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Цэс нээх"
+            className="lg:hidden flex flex-col justify-center gap-1.5 h-9 w-9 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            <span
+              className={`block h-0.5 w-5 mx-auto bg-white transition-transform duration-200 ${
+                open ? "translate-y-2 rotate-45" : ""
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-5 mx-auto bg-white transition-opacity duration-200 ${
+                open ? "opacity-0" : ""
+              }`}
+            />
+            <span
+              className={`block h-0.5 w-5 mx-auto bg-white transition-transform duration-200 ${
+                open ? "-translate-y-2 -rotate-45" : ""
+              }`}
+            />
+          </button>
         </div>
       </div>
+
+      {open && (
+        <nav className="lg:hidden border-t border-white/10 bg-brand-darker animate-fade-in">
+          <div className="container-page py-3 flex flex-col gap-1">
+            {links.map((link) => {
+              const active = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className={`px-3 py-2.5 rounded-lg text-sm transition-colors duration-150 ${
+                    active
+                      ? "bg-white/10 text-white font-medium"
+                      : "text-white/70 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </header>
   );
 }

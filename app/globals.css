@@ -4,18 +4,112 @@
 
 html,
 body {
-  background-color: #f5f5f5;
-  color: #1a1a1a;
+  background-color: #f6f7f5;
+  color: #1a1f1c;
+}
+
+* {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: theme("colors.accent.light");
+  color: theme("colors.brand.darker");
+}
+
+:focus-visible {
+  outline: 2px solid theme("colors.accent.DEFAULT");
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .container-page {
-  @apply max-w-6xl mx-auto px-4;
+  @apply max-w-6xl mx-auto px-4 sm:px-6;
 }
 
+/* Buttons */
 .btn-primary {
-  @apply bg-brand-dark text-white px-4 py-2 rounded-md hover:bg-brand-darker transition-colors;
+  @apply inline-flex items-center justify-center gap-2 bg-brand-dark text-white px-5 py-2.5 rounded-lg font-medium
+    shadow-soft hover:bg-brand-darker hover:shadow-lift active:scale-[0.98]
+    transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none;
 }
 
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 bg-white text-brand-darker px-5 py-2.5 rounded-lg font-medium
+    border border-surface hover:border-brand-300 hover:bg-brand-50 active:scale-[0.98]
+    transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-accent {
+  @apply inline-flex items-center justify-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg font-medium
+    shadow-soft hover:bg-accent-dark hover:shadow-lift active:scale-[0.98]
+    transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-ghost {
+  @apply inline-flex items-center justify-center gap-1.5 text-brand-darker font-medium
+    hover:text-accent-dark transition-colors duration-150;
+}
+
+/* Surfaces */
 .card {
-  @apply bg-white border border-surface rounded-lg shadow-sm;
+  @apply bg-white border border-surface rounded-2xl shadow-soft;
+}
+
+.card-hover {
+  @apply hover:shadow-lift hover:-translate-y-0.5 transition-all duration-200;
+}
+
+/* Forms */
+.input {
+  @apply w-full border border-surface bg-white rounded-lg px-3.5 py-2.5 text-ink placeholder:text-ink/40
+    focus:border-brand-400 transition-colors duration-150;
+}
+
+.label {
+  @apply text-xs font-semibold uppercase tracking-wide text-ink/50;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+}
+
+.badge-brand {
+  @apply badge bg-brand-100 text-brand-darker;
+}
+
+.badge-accent {
+  @apply badge bg-accent/15 text-accent-dark;
+}
+
+/* Section heading */
+.page-title {
+  @apply text-2xl md:text-3xl font-bold text-brand-darker tracking-tight;
+}
+
+.page-subtitle {
+  @apply text-ink/60 text-sm mt-1.5 leading-relaxed;
+}
+
+/* Segmented control */
+.segmented-btn {
+  @apply px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors duration-150;
+}
+
+.segmented-btn-active {
+  @apply segmented-btn bg-brand-dark text-white border-brand-dark shadow-soft;
+}
+
+.segmented-btn-inactive {
+  @apply segmented-btn border-surface text-ink/60 bg-white hover:border-brand-300 hover:text-brand-darker;
+}
+
+/* Modal */
+.modal-backdrop {
+  @apply fixed inset-0 bg-brand-darker/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in;
+}
+
+.modal-panel {
+  @apply bg-white rounded-2xl p-6 w-full shadow-lift animate-scale-in;
 }

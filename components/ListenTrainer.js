@@ -55,24 +55,22 @@ export default function ListenTrainer({ target, morse, onComplete }) {
   }
 
   return (
-    <div className="card p-6 space-y-4">
+    <div className="card p-6 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <span className="text-xs text-ink/60 uppercase tracking-wide">
-            Сонсоод бичнэ үү ({target.length} тэмдэгт)
-          </span>
-          <p className="text-sm text-ink/60">Тоглогдсон удаа: {playCount}</p>
+          <span className="label">Сонсоод бичнэ үү ({target.length} тэмдэгт)</span>
+          <p className="text-sm text-ink/50 mt-1">Тоглогдсон удаа: {playCount}</p>
         </div>
 
-        <label className="flex flex-col text-sm">
-          Хурд (WPM): {wpm}
+        <label className="flex flex-col text-sm gap-1 text-ink/60">
+          Хурд (WPM): <span className="font-semibold text-brand-darker">{wpm}</span>
           <input
             type="range"
             min="5"
             max="40"
             value={wpm}
             onChange={(e) => setWpm(Number(e.target.value))}
-            className="w-40"
+            className="w-40 accent-accent"
           />
         </label>
       </div>
@@ -85,19 +83,19 @@ export default function ListenTrainer({ target, morse, onComplete }) {
         value={typed}
         onChange={handleChange}
         disabled={finished}
-        className="w-full border border-surface rounded-md px-3 py-2 font-mono text-xl tracking-widest"
+        className="input font-mono text-xl tracking-widest"
         placeholder="Сонссон тэмдэгтээ бичнэ үү..."
       />
 
       {!finished && typed.length > 0 && (
-        <button onClick={handleSubmit} className="text-sm underline text-brand-darker">
-          Хариулт илгээх
+        <button onClick={handleSubmit} className="btn-ghost text-sm">
+          Хариулт илгээх →
         </button>
       )}
 
       {finished && (
-        <p className="text-brand-darker font-medium">
-          Дууслаа. Үр дүнг доор харна уу.
+        <p className="text-accent-dark font-medium flex items-center gap-1.5">
+          ✓ Дууслаа. Үр дүнг доор харна уу.
         </p>
       )}
     </div>

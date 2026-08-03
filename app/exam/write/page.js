@@ -56,13 +56,19 @@ export default function WriteExamPage() {
   }
 
   if (error) {
-    return <p className="text-red-700">{error}</p>;
+    return (
+      <div className="max-w-md mx-auto card p-6 text-center space-y-2 animate-fade-in">
+        <p className="text-2xl">🔒</p>
+        <p className="text-ink/70">{error}</p>
+      </div>
+    );
   }
 
   if (finalResult) {
     return (
-      <div className="max-w-xl mx-auto space-y-4">
-        <h1 className="text-2xl font-bold text-brand-darker">Шалгалт дууслаа!</h1>
+      <div className="max-w-xl mx-auto space-y-5 text-center animate-fade-in">
+        <p className="text-4xl">🏁</p>
+        <h1 className="page-title">Шалгалт дууслаа!</h1>
         <ResultPanel
           result={{
             accuracy: finalResult.accuracy,
@@ -71,21 +77,31 @@ export default function WriteExamPage() {
             durationSeconds: 0,
           }}
         />
-        <p>Эцсийн оноо: <strong>{finalResult.score}</strong></p>
+        <p className="text-ink/70">
+          Эцсийн оноо: <strong className="text-brand-darker text-lg">{finalResult.score}</strong>
+        </p>
         {finalResult.isNewMax && (
-          <p className="text-brand-dark font-medium">🎉 Шинэ дээд амжилт тогтоолоо!</p>
+          <p className="badge-accent mx-auto w-fit text-sm py-1.5 px-3">🎉 Шинэ дээд амжилт тогтоолоо!</p>
         )}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-brand-darker">Write Exam</h1>
-        <p className="text-ink/70 text-sm mt-1">
-          Үе {roundIndex + 1} / {TOTAL_ROUNDS}
-        </p>
+        <h1 className="page-title">Write Exam</h1>
+        <div className="flex items-center gap-3 mt-3">
+          <div className="h-2 flex-1 rounded-full bg-surface overflow-hidden">
+            <div
+              className="h-full bg-accent rounded-full transition-all duration-300"
+              style={{ width: `${(roundIndex / TOTAL_ROUNDS) * 100}%` }}
+            />
+          </div>
+          <span className="text-sm text-ink/50 font-medium whitespace-nowrap">
+            {roundIndex + 1} / {TOTAL_ROUNDS}
+          </span>
+        </div>
       </div>
 
       {target && !lastResult && (

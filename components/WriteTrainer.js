@@ -69,22 +69,22 @@ export default function WriteTrainer({ target, inputMode = "keyboard", onComplet
   });
 
   return (
-    <div className="card p-6 space-y-4">
+    <div className="card p-6 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <span className="text-xs text-ink/60 uppercase tracking-wide">Зорилтот текст</span>
-          <p className="text-2xl font-mono font-bold tracking-widest">{target}</p>
+          <span className="label">Зорилтот текст</span>
+          <p className="text-3xl font-mono font-bold tracking-widest text-brand-darker mt-1">{target}</p>
         </div>
 
-        <label className="flex flex-col text-sm">
-          Хурд (WPM): {wpm}
+        <label className="flex flex-col text-sm gap-1 text-ink/60">
+          Хурд (WPM): <span className="font-semibold text-brand-darker">{wpm}</span>
           <input
             type="range"
             min="5"
             max="40"
             value={wpm}
             onChange={(e) => setWpm(Number(e.target.value))}
-            className="w-40"
+            className="w-40 accent-accent"
           />
         </label>
       </div>
@@ -96,23 +96,24 @@ export default function WriteTrainer({ target, inputMode = "keyboard", onComplet
           onChange={handleChange}
           disabled={finished}
           autoFocus
-          className="w-full border border-surface rounded-md px-3 py-2 font-mono text-xl tracking-widest"
+          className="input font-mono text-xl tracking-widest"
           placeholder="Энд бичнэ үү..."
         />
       ) : (
-        <div className="space-y-1">
-          <p className="text-sm text-ink/60">
-            Q = Цэг (.) &nbsp;·&nbsp; W = Зураас (-)
+        <div className="space-y-1.5">
+          <p className="text-sm text-ink/50">
+            <kbd className="badge-brand">Q</kbd> = Цэг (.) &nbsp;·&nbsp; <kbd className="badge-brand">W</kbd> = Зураас (-)
           </p>
-          <div className="w-full border border-surface rounded-md px-3 py-2 font-mono text-xl tracking-widest min-h-[3rem] bg-surface-light">
+          <div className="w-full border border-surface rounded-lg px-3.5 py-2.5 font-mono text-xl tracking-widest min-h-[3.25rem] bg-surface-light">
             {typed}
+            <span className="inline-block w-0.5 h-5 bg-accent align-middle animate-pulse ml-0.5" />
           </div>
         </div>
       )}
 
       {finished && (
-        <p className="text-brand-darker font-medium">
-          Дууслаа. Үр дүнг доор харна уу.
+        <p className="text-accent-dark font-medium flex items-center gap-1.5">
+          ✓ Дууслаа. Үр дүнг доор харна уу.
         </p>
       )}
     </div>

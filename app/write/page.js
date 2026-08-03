@@ -21,10 +21,10 @@ export default function WritePracticePage() {
   }, [loadNext]);
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-brand-darker">Write — Бичих дадлага</h1>
-        <p className="text-ink/70 text-sm mt-1">
+        <h1 className="page-title">⌨️ Write — Бичих дадлага</h1>
+        <p className="page-subtitle">
           Random 5 тэмдэгтийг гараас эсвэл телеграфын түлхүүрээр (Q = Цэг, W = Зураас) бичнэ.
         </p>
       </div>
@@ -60,14 +60,7 @@ export default function WritePracticePage() {
 
 function ModeButton({ active, onClick, children }) {
   return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1.5 rounded-md text-sm border ${
-        active
-          ? "bg-brand-dark text-white border-brand-dark"
-          : "border-surface text-ink/70"
-      }`}
-    >
+    <button onClick={onClick} className={active ? "segmented-btn-active" : "segmented-btn-inactive"}>
       {children}
     </button>
   );

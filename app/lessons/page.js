@@ -17,24 +17,33 @@ export default function LessonsPage() {
       .catch((e) => setError(e.message));
   }, []);
 
-  if (error) return <p className="text-red-700">{error}</p>;
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto card p-6 text-center space-y-2 animate-fade-in">
+        <p className="text-2xl">🔒</p>
+        <p className="text-ink/70">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-brand-darker">Хичээлүүд</h1>
+    <div className="space-y-6 animate-fade-in">
+      <h1 className="page-title">🎓 Хичээлүүд</h1>
       <div className="grid gap-4">
         {lessons.map((lesson) => (
-          <div key={lesson._id} className="card p-4">
-            <h2 className="font-semibold">{lesson.title}</h2>
-            <p className="text-sm text-ink/60 mb-2">
+          <div key={lesson._id} className="card p-5">
+            <h2 className="font-semibold text-brand-darker">{lesson.title}</h2>
+            <p className="text-sm text-ink/50 mb-3">
               Багш: {lesson.teacherId?.nickname || "—"}
             </p>
-            <video src={lesson.videoUrl} controls className="w-full rounded-md" />
-            <p className="text-sm text-ink/70 mt-2">{lesson.description}</p>
+            <video src={lesson.videoUrl} controls className="w-full rounded-lg" />
+            <p className="text-sm text-ink/70 mt-3 leading-relaxed">{lesson.description}</p>
           </div>
         ))}
         {lessons.length === 0 && (
-          <p className="text-ink/60 text-sm">Одоогоор хичээл алга байна.</p>
+          <div className="card p-10 text-center text-ink/50 text-sm">
+            Одоогоор хичээл алга байна.
+          </div>
         )}
       </div>
     </div>

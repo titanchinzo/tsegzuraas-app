@@ -8,12 +8,27 @@ import FileUpload from "@/components/FileUpload";
 // API талд (requireRole) хийдэг тул энд UI-г л харуулна.
 export default function TeacherDashboardPage() {
   return (
-    <div className="space-y-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-brand-darker">Багшийн самбар</h1>
+    <div className="space-y-8 max-w-2xl animate-fade-in">
+      <h1 className="page-title">🧑‍🏫 Багшийн самбар</h1>
       <LessonUploadForm />
       <ExamQuestionForm />
       <StudentAddForm />
     </div>
+  );
+}
+
+function StatusMessage({ status }) {
+  if (!status) return null;
+  const ok = status.ok;
+  return (
+    <p
+      className={`text-sm px-3 py-2 rounded-lg ${
+        ok ? "bg-brand-50 text-brand-darker" : "bg-red-50 text-red-700"
+      }`}
+    >
+      {ok ? "✓ " : "✕ "}
+      {status.text}
+    </p>
   );
 }
 
@@ -28,19 +43,19 @@ function LessonUploadForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    setStatus(res.ok ? "Хичээл нэмэгдлээ." : "Алдаа гарлаа.");
+    setStatus(res.ok ? { ok: true, text: "Хичээл нэмэгдлээ." } : { ok: false, text: "Алдаа гарлаа." });
     if (res.ok) setForm({ title: "", videoUrl: "", description: "" });
   }
 
   return (
     <form onSubmit={submit} className="card p-6 space-y-3">
-      <h2 className="font-bold">Хичээл (Видео) Upload</h2>
-      {status && <p className="text-sm">{status}</p>}
+      <h2 className="font-bold text-brand-darker">Хичээл (Видео) Upload</h2>
+      <StatusMessage status={status} />
       <input
         placeholder="Гарчиг"
         value={form.title}
         onChange={(e) => setForm({ ...form, title: e.target.value })}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       />
       <FileUpload
         accept="video/*"
@@ -51,13 +66,14 @@ function LessonUploadForm() {
         placeholder="Видео URL (эсвэл дээр хуулна уу)"
         value={form.videoUrl}
         onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       />
       <textarea
         placeholder="Тайлбар"
         value={form.description}
         onChange={(e) => setForm({ ...form, description: e.target.value })}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
+        rows={3}
       />
       <button className="btn-primary">Нэмэх</button>
     </form>
@@ -75,18 +91,18 @@ function ExamQuestionForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    setStatus(res.ok ? "Асуулт нэмэгдлээ." : "Алдаа гарлаа.");
+    setStatus(res.ok ? { ok: true, text: "Асуулт нэмэгдлээ." } : { ok: false, text: "Алдаа гарлаа." });
     if (res.ok) setForm({ type: "write", text: "" });
   }
 
   return (
     <form onSubmit={submit} className="card p-6 space-y-3">
-      <h2 className="font-bold">Шалгалтын асуулт оруулах</h2>
-      {status && <p className="text-sm">{status}</p>}
+      <h2 className="font-bold text-brand-darker">Шалгалтын асуулт оруулах</h2>
+      <StatusMessage status={status} />
       <select
         value={form.type}
         onChange={(e) => setForm({ ...form, type: e.target.value })}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       >
         <option value="write">Write</option>
         <option value="listen">Listen</option>
@@ -95,7 +111,7 @@ function ExamQuestionForm() {
         placeholder="Текст"
         value={form.text}
         onChange={(e) => setForm({ ...form, text: e.target.value })}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       />
       <button className="btn-primary">Нэмэх</button>
     </form>
@@ -113,25 +129,25 @@ function StudentAddForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    setStatus(res.ok ? "Сурагч нэмэгдлээ." : "Алдаа гарлаа.");
+    setStatus(res.ok ? { ok: true, text: "Сурагч нэмэгдлээ." } : { ok: false, text: "Алдаа гарлаа." });
     if (res.ok) setForm({ studentId: "", group: "" });
   }
 
   return (
     <form onSubmit={submit} className="card p-6 space-y-3">
-      <h2 className="font-bold">Сурагч нэмэх</h2>
-      {status && <p className="text-sm">{status}</p>}
+      <h2 className="font-bold text-brand-darker">Сурагч нэмэх</h2>
+      <StatusMessage status={status} />
       <input
         placeholder="Сурагчийн User ID (MongoDB _id)"
         value={form.studentId}
         onChange={(e) => setForm({ ...form, studentId: e.target.value })}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       />
       <input
         placeholder="Бүлэг (жишээ: 2026-01)"
         value={form.group}
         onChange={(e) => setForm({ ...form, group: e.target.value })}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       />
       <button className="btn-primary">Нэмэх</button>
     </form>

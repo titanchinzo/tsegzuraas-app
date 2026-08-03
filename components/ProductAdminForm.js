@@ -38,13 +38,13 @@ export default function ProductAdminForm({ onCreated }) {
   return (
     <form onSubmit={handleSubmit} className="card p-6 space-y-3 max-w-lg">
       <h3 className="font-bold text-brand-darker">Шинэ бүтээгдэхүүн нэмэх (Admin)</h3>
-      {error && <p className="text-red-700 text-sm">{error}</p>}
+      {error && <p className="text-red-700 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
       <input
         placeholder="Нэр"
         value={form.name}
         onChange={(e) => update("name", e.target.value)}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
         required
       />
       <input
@@ -52,7 +52,7 @@ export default function ProductAdminForm({ onCreated }) {
         type="number"
         value={form.price}
         onChange={(e) => update("price", e.target.value)}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
         required
       />
       <FileUpload
@@ -64,20 +64,20 @@ export default function ProductAdminForm({ onCreated }) {
         placeholder="Зурагны URL (эсвэл дээр хуулна уу)"
         value={form.imageUrl}
         onChange={(e) => update("imageUrl", e.target.value)}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       />
       <input
         placeholder="Үлдэгдэл"
         type="number"
         value={form.stock}
         onChange={(e) => update("stock", e.target.value)}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
       />
       <textarea
         placeholder="Дэлгэрэнгүй тайлбар"
         value={form.description}
         onChange={(e) => update("description", e.target.value)}
-        className="w-full border border-surface rounded-md px-3 py-2"
+        className="input"
         rows={3}
       />
 

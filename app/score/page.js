@@ -13,11 +13,18 @@ export default function ScorePage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-brand-darker">Дүнгийн самбар (Leaderboard)</h1>
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="page-title">🏆 Дүнгийн самбар</h1>
+        <p className="page-subtitle">Хамгийн өндөр амжилт үзүүлсэн хэрэглэгчид.</p>
+      </div>
 
       {!data ? (
-        <p>Ачааллаж байна...</p>
+        <div className="grid md:grid-cols-3 gap-6">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="card p-6 h-48 animate-pulse bg-surface-light" />
+          ))}
+        </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
           <Leaderboard title="Нийт дүн" data={data.total} scoreKey="total" />

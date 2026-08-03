@@ -24,17 +24,13 @@ export default function MorseTable() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex gap-2 flex-wrap">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-3 py-1.5 rounded-md text-sm border ${
-              tab === t.key
-                ? "bg-brand-dark text-white border-brand-dark"
-                : "border-surface text-ink/70"
-            }`}
+            className={tab === t.key ? "segmented-btn-active" : "segmented-btn-inactive"}
           >
             {t.label}
           </button>
@@ -46,33 +42,30 @@ export default function MorseTable() {
           <button
             key={char}
             onClick={() => openPractice(char)}
-            className="card p-4 text-center hover:shadow-md transition-shadow"
+            className="card card-hover p-4 text-center group"
           >
-            <p className="text-xl font-bold">{char}</p>
-            <p className="font-mono text-brand-darker">{MORSE_MAP[char]}</p>
+            <p className="text-xl font-bold group-hover:text-accent-dark transition-colors">{char}</p>
+            <p className="font-mono text-brand-dark text-sm mt-0.5">{MORSE_MAP[char]}</p>
           </button>
         ))}
       </div>
 
       {active && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
-          onClick={() => setActive(null)}
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-md w-full space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-backdrop" onClick={() => setActive(null)}>
+          <div className="modal-panel max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">
-                {active} — {MORSE_MAP[active]}
+              <h3 className="text-lg font-bold text-brand-darker">
+                {active} <span className="text-accent-dark font-mono">{MORSE_MAP[active]}</span>
               </h3>
-              <button onClick={() => setActive(null)} className="text-ink/50">
+              <button
+                onClick={() => setActive(null)}
+                className="h-8 w-8 flex items-center justify-center rounded-full text-ink/40 hover:bg-surface hover:text-ink transition-colors"
+              >
                 ✕
               </button>
             </div>
 
-            <button onClick={() => playChar(MORSE_MAP[active])} className="btn-primary">
+            <button onClick={() => playChar(MORSE_MAP[active])} className="btn-primary w-full">
               ▶ Дуугаар сонсох
             </button>
 

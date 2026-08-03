@@ -30,7 +30,7 @@ export default function FileUpload({ accept, onUploaded, label = "Файл ху�
 
   return (
     <div className="space-y-1">
-      <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-brand-darker hover:underline">
+      <label className="inline-flex items-center gap-2 cursor-pointer text-sm">
         <input
           ref={inputRef}
           type="file"
@@ -39,8 +39,8 @@ export default function FileUpload({ accept, onUploaded, label = "Файл ху�
           disabled={uploading}
           className="hidden"
         />
-        <span className="border border-surface rounded-md px-3 py-1.5 bg-surface-light">
-          {uploading ? "Хуулж байна..." : label}
+        <span className="border border-dashed border-brand-300 rounded-lg px-3.5 py-2 bg-brand-50 text-brand-darker font-medium hover:bg-brand-100 hover:border-brand-400 transition-colors">
+          {uploading ? "⏳ Хуулж байна..." : `📎 ${label}`}
         </span>
       </label>
       {error && <p className="text-red-700 text-xs">{error}</p>}

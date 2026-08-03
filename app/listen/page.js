@@ -20,10 +20,10 @@ export default function ListenPracticePage() {
   }, [loadNext]);
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-brand-darker">Listen — Сонсох дадлага</h1>
-        <p className="text-ink/70 text-sm mt-1">
+        <h1 className="page-title">🎧 Listen — Сонсох дадлага</h1>
+        <p className="page-subtitle">
           Random 5 тэмдэгтийн морзын дууг сонсоод бичнэ.
         </p>
       </div>

@@ -8,20 +8,53 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          dark: "#4A5D4E",   // Бараан ногоон
-          darker: "#2F4F4F", // Хар ногоон
+          50: "#f0f5f2",
+          100: "#dbe7e0",
+          200: "#b8d0c3",
+          300: "#8fb3a0",
+          400: "#5f8b76",
+          500: "#436b58",
+          dark: "#3a5f4d",    // Бараан ногоон
+          darker: "#233c33",  // Хар ногоон
+          900: "#182922",
+        },
+        accent: {
+          DEFAULT: "#c8963e", // Зэсэн түлхүүрийн алт өнгө
+          light: "#e0b568",
+          dark: "#a3782c",
         },
         surface: {
-          DEFAULT: "#EAEAEA", // Саарал
-          light: "#F5F5F5",   // Цайвар саарал
+          DEFAULT: "#e7e9e6", // Саарал
+          light: "#f6f7f5",   // Цайвар саарал
         },
         ink: {
-          DEFAULT: "#1A1A1A", // Хар текст
+          DEFAULT: "#1a1f1c", // Хар текст
           inverse: "#FFFFFF", // Цагаан текст
         },
       },
+      fontFamily: {
+        sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       gridTemplateRows: {
         layout: "auto 1fr auto", // Header / Content / Footer (3/1 structure)
+      },
+      boxShadow: {
+        soft: "0 1px 2px rgba(24,41,34,0.06), 0 2px 8px rgba(24,41,34,0.06)",
+        lift: "0 8px 24px rgba(24,41,34,0.12)",
+      },
+      keyframes: {
+        "fade-in": {
+          "0%": { opacity: 0, transform: "translateY(4px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
+        "scale-in": {
+          "0%": { opacity: 0, transform: "scale(0.96)" },
+          "100%": { opacity: 1, transform: "scale(1)" },
+        },
+      },
+      animation: {
+        "fade-in": "fade-in 0.25s ease-out",
+        "scale-in": "scale-in 0.18s ease-out",
       },
     },
   },
