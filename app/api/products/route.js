@@ -2,6 +2,8 @@ import { connectDB } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import Product from "@/models/Product";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/products - Бүх бүтээгдэхүүн авах (Guest ч үзнэ)
 export async function GET() {
   await connectDB();

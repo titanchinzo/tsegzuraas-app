@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import Score from "@/models/Score";
 import User from "@/models/User"; // eslint-disable-line no-unused-vars -- populate-д хэрэгтэй
 
+export const dynamic = "force-dynamic";
+
 // GET /api/scores/leaderboard - Top 10 (нийт, write, listen тус тусад) + одоогийн хэрэглэгчийн байр
 export async function GET() {
   await connectDB();
