@@ -69,7 +69,13 @@ export default function MorseTable() {
               ▶ Дуугаар сонсох
             </button>
 
-            <WriteTrainer key={active} target={active} inputMode="keyboard" onComplete={setResult} />
+            <WriteTrainer
+              key={active}
+              target={active}
+              inputMode="keyboard"
+              onComplete={setResult}
+              onReset={() => setResult(null)}
+            />
             <ResultPanel result={result} />
           </div>
         </div>

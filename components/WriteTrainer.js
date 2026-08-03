@@ -13,17 +13,30 @@ import { buildAttemptResult } from "@/lib/scoring";
  *  - inputMode: "key" | "keyboard"  Тусгай түлхүүр (Q/W) эсвэл ердийн гараас
  *  - onComplete(result): дуусахад дуудагдана (buildAttemptResult-ийн буцаалт)
  */
-export default function WriteTrainer({ target, inputMode = "keyboard", onComplete }) {
+export default function WriteTrainer({
+  target,
+  inputMode = "keyboard",
+  onComplete,
+  onReset,
+  allowRestart = true,
+}) {
   const [wpm, setWpm] = useState(20);
   const [typed, setTyped] = useState("");
   const [startedAt, setStartedAt] = useState(null);
   const [finished, setFinished] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => {
+  const reset = useCallback(() => {
     setTyped("");
     setStartedAt(null);
     setFinished(false);
+    onReset?.();
+    inputRef.current?.focus();
+  }, [onReset]);
+
+  useEffect(() => {
+    reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target]);
 
   const finish = useCallback(
@@ -42,7 +55,7 @@ export default function WriteTrainer({ target, inputMode = "keyboard", onComplet
   );
 
   function handleChange(e) {
-    const val = e.target.value.toUpperCase();
+    const val = e.target.value.toUpperCase().slice(0, target.length);
     if (!startedAt) setStartedAt(Date.now());
     setTyped(val);
     if (val.length >= target.length) {
@@ -75,36 +88,49 @@ export default function WriteTrainer({ target, inputMode = "keyboard", onComplet
 
   return (
     <div className="card p-6 space-y-5">
-      {/* Зорилтот текст — том pill дэлгэц */}
-      <div className="relative bg-brand-darker rounded-full px-6 py-5 overflow-hidden">
+      {/* Зорилтот текст — monkeytype-шиг тэмдэгт бүрээр зөв/буруу өнгөтэй */}
+      <div
+        className="relative bg-brand-darker rounded-full px-6 py-5 overflow-hidden cursor-text"
+        onClick={() => inputRef.current?.focus()}
+      >
         <span className="absolute left-6 top-2 text-xs font-semibold uppercase tracking-wide text-white/40">
           Зорилтот текст
         </span>
-        <p className="text-center text-3xl md:text-4xl font-mono font-bold tracking-[0.3em] text-white pt-2">
-          {target}
+        <p className="text-center text-3xl md:text-4xl font-mono font-bold tracking-[0.3em] pt-2 select-none">
+          {target.split("").map((ch, idx) => {
+            let cls = "text-white/30"; // хараахан бичигдээгүй
+            if (idx < typed.length) {
+              cls = typed[idx] === ch ? "text-white" : "text-red-400 underline decoration-2 underline-offset-4";
+            }
+            const isCaret = idx === typed.length && !finished;
+            return (
+              <span
+                key={idx}
+                className={`${cls} ${isCaret ? "border-l-2 border-accent animate-pulse" : ""}`}
+              >
+                {ch}
+              </span>
+            );
+          })}
         </p>
+
+        {inputMode === "keyboard" && (
+          <input
+            ref={inputRef}
+            value={typed}
+            onChange={handleChange}
+            disabled={finished}
+            autoFocus
+            className="absolute inset-0 w-full h-full opacity-0 cursor-text"
+          />
+        )}
       </div>
 
-      {inputMode === "keyboard" ? (
-        <input
-          ref={inputRef}
-          value={typed}
-          onChange={handleChange}
-          disabled={finished}
-          autoFocus
-          className="input font-mono text-xl tracking-widest text-center"
-          placeholder="Энд бичнэ үү..."
-        />
-      ) : (
-        <div className="space-y-1.5">
-          <p className="text-sm text-ink/50 text-center">
-            <kbd className="badge-brand">Q</kbd> = Цэг (.) &nbsp;·&nbsp; <kbd className="badge-brand">W</kbd> = Зураас (-)
-          </p>
-          <div className="w-full border border-surface rounded-lg px-3.5 py-2.5 font-mono text-xl tracking-widest min-h-[3.25rem] bg-surface-light text-center">
-            {typed}
-            <span className="inline-block w-0.5 h-5 bg-accent align-middle animate-pulse ml-0.5" />
-          </div>
-        </div>
+      {inputMode === "key" && (
+        <p className="text-sm text-ink/50 text-center">
+          <kbd className="badge-brand">Q</kbd> = Цэг (.) &nbsp;·&nbsp; <kbd className="badge-brand">W</kbd> = Зураас (-)
+          &nbsp;·&nbsp; одоогийн тэмдэгт: <span className="font-mono text-brand-darker">{currentSymbols || "—"}</span>
+        </p>
       )}
 
       {/* Одоогийн болон тайлсан морз */}
@@ -123,19 +149,31 @@ export default function WriteTrainer({ target, inputMode = "keyboard", onComplet
         </div>
       </div>
 
-      <label className="flex items-center gap-3 text-sm text-ink/60">
-        <span className="whitespace-nowrap">
-          Хурд (WPM): <span className="font-semibold text-brand-darker">{wpm}</span>
-        </span>
-        <input
-          type="range"
-          min="5"
-          max="40"
-          value={wpm}
-          onChange={(e) => setWpm(Number(e.target.value))}
-          className="flex-1 accent-accent"
-        />
-      </label>
+      <div className="flex items-center gap-3 text-sm text-ink/60">
+        <label className="flex items-center gap-3 flex-1">
+          <span className="whitespace-nowrap">
+            Хурд (WPM): <span className="font-semibold text-brand-darker">{wpm}</span>
+          </span>
+          <input
+            type="range"
+            min="5"
+            max="40"
+            value={wpm}
+            onChange={(e) => setWpm(Number(e.target.value))}
+            className="flex-1 accent-accent"
+          />
+        </label>
+        {allowRestart && (
+          <button
+            onClick={reset}
+            type="button"
+            className="btn-secondary !px-3 !py-1.5 text-sm shrink-0"
+            title="Дахин эхлүүлэх"
+          >
+            ↻ Дахин эхлүүлэх
+          </button>
+        )}
+      </div>
 
       {finished && (
         <p className="text-accent-dark font-medium flex items-center gap-1.5">

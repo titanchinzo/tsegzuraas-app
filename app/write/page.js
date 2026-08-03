@@ -44,6 +44,7 @@ export default function WritePracticePage() {
           target={target}
           inputMode={inputMode}
           onComplete={setResult}
+          onReset={() => setResult(null)}
         />
       )}
 

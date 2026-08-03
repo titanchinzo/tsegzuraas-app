@@ -105,7 +105,13 @@ export default function WriteExamPage() {
       </div>
 
       {target && !lastResult && (
-        <WriteTrainer key={roundIndex} target={target} inputMode="keyboard" onComplete={handleComplete} />
+        <WriteTrainer
+          key={roundIndex}
+          target={target}
+          inputMode="keyboard"
+          onComplete={handleComplete}
+          allowRestart={false}
+        />
       )}
 
       {lastResult && (
