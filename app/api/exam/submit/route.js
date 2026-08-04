@@ -5,13 +5,14 @@ import { aggregateExamAttempts } from "@/lib/scoring";
 
 // POST /api/exam/submit
 // Body: { type: "write"|"listen", attempts: [{ accuracy, wpm, correct, errors, total, durationSeconds }, ...] (5ш) }
-// Зөвхөн Student эрхтэй хэрэглэгч шалгалт өгнө (spec: Write/Listen Шалгалт - Student only).
+// Student эрхтэй хэрэглэгч шалгалт өгнө; Admin бас турших зорилгоор өгч болно
+// (spec: Write/Listen Шалгалт - Student only, Admin-д тест хийх эрх нэмэгдсэн).
 export async function POST(req) {
   const user = await getCurrentUser();
   if (!user) {
     return Response.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
   }
-  if (user.role !== "student") {
+  if (!["student", "admin"].includes(user.role)) {
     return Response.json(
       { error: "Зөвхөн Student шалгалт өгөх боломжтой" },
       { status: 403 }

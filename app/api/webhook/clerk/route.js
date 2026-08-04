@@ -51,9 +51,14 @@ export async function POST(req) {
       (data.email_addresses?.[0]?.email_address?.split("@")[0]) ||
       "Хэрэглэгч";
 
-    const email = data.email_addresses?.[0]?.email_address || "";
     const ADMIN_EMAILS = ["titaniumchinzo@gmail.com"];
-    const role = ADMIN_EMAILS.includes(email.trim().toLowerCase()) ? "admin" : "student";
+    const emails = data.email_addresses || [];
+    const adminMatch = emails.find((e) =>
+      ADMIN_EMAILS.includes((e.email_address || "").trim().toLowerCase())
+    );
+    const primary = emails.find((e) => e.id === data.primary_email_address_id);
+    const email = adminMatch?.email_address || primary?.email_address || emails[0]?.email_address || "";
+    const role = adminMatch ? "admin" : "student";
 
     await User.findOneAndUpdate(
       { clerkId: data.id },

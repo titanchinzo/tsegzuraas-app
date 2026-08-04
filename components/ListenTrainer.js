@@ -94,9 +94,15 @@ export default function ListenTrainer({ target, morse, onComplete }) {
       )}
 
       {finished && (
-        <p className="text-accent-dark font-medium flex items-center gap-1.5">
-          ✓ Дууслаа. Үр дүнг доор харна уу.
-        </p>
+        <div className="space-y-2">
+          <p className="text-accent-dark font-medium flex items-center gap-1.5">
+            ✓ Дууслаа. Үр дүнг доор харна уу.
+          </p>
+          <div className="bg-surface-light border border-surface rounded-lg p-3.5">
+            <p className="label">Зөв хариулт байсан</p>
+            <p className="font-mono text-xl tracking-widest text-brand-darker mt-1">{target}</p>
+          </div>
+        </div>
       )}
     </div>
   );

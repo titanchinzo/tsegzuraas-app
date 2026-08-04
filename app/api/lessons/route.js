@@ -2,10 +2,10 @@ import { connectDB } from "@/lib/db";
 import { requireRole, getCurrentUser } from "@/lib/auth";
 import Lesson from "@/models/Lesson";
 
-// GET /api/lessons - Бүх хичээл авах (Teacher, Student эрхтэй үзнэ)
+// GET /api/lessons - Бүх хичээл авах (Teacher, Student, Admin эрхтэй үзнэ)
 export async function GET() {
   const user = await getCurrentUser();
-  if (!user || !["teacher", "student"].includes(user.role)) {
+  if (!user || !["teacher", "student", "admin"].includes(user.role)) {
     return Response.json({ error: "Эрх байхгүй байна" }, { status: 403 });
   }
 

@@ -62,14 +62,14 @@ export default function Navbar() {
 
   const links = [
     ...NAV_LINKS,
-    ...(role === "teacher" || role === "student"
+    ...(role === "teacher" || role === "student" || role === "admin"
       ? [
           { href: "/lessons", label: "Lessons" },
           { href: "/exam/write", label: "Write Exam" },
           { href: "/exam/listen", label: "Listen Exam" },
         ]
       : []),
-    ...(role === "teacher" ? [{ href: "/teacher", label: "Teacher" }] : []),
+    ...(role === "teacher" || role === "admin" ? [{ href: "/teacher", label: "Teacher" }] : []),
     ...(role === "admin" ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
