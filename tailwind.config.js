@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,jsx}",
     "./components/**/*.{js,jsx}",
@@ -7,6 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        page: "hsl(var(--page) / <alpha-value>)",
         brand: {
           50: "#f0f5f2",
           100: "#dbe7e0",
@@ -24,16 +26,18 @@ module.exports = {
           dark: "#a3782c",
         },
         surface: {
-          DEFAULT: "#e7e9e6", // Саарал
-          light: "#f6f7f5",   // Цайвар саарал
+          DEFAULT: "hsl(var(--surface) / <alpha-value>)",       // Хил, зааг
+          light: "hsl(var(--surface-light) / <alpha-value>)",   // Сул дэвсгэр
+          card: "hsl(var(--surface-card) / <alpha-value>)",     // Карт/input/modal дэвсгэр
         },
         ink: {
-          DEFAULT: "#1a1f1c", // Хар текст
-          inverse: "#FFFFFF", // Цагаан текст
+          DEFAULT: "hsl(var(--ink) / <alpha-value>)", // Үндсэн текст
+          inverse: "#FFFFFF", // Цагаан текст (үргэлж бараан дэвсгэр дээр)
         },
       },
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       gridTemplateRows: {
         layout: "auto 1fr auto", // Header / Content / Footer (3/1 structure)

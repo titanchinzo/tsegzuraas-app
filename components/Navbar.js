@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
 import {
   SignedIn,
   SignedOut,
@@ -10,6 +12,25 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import useCurrentUser from "@/lib/useCurrentUser";
+
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) return <span className="h-9 w-9 shrink-0" />;
+
+  const isDark = resolvedTheme === "dark";
+  return (
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={isDark ? "Цайвар горим руу шилжих" : "Бараан горим руу шилжих"}
+      className="flex h-9 w-9 items-center justify-center rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+    >
+      {isDark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}
+    </button>
+  );
+}
 
 const NAV_LINKS = [
   { href: "/", label: "Нүүр" },
@@ -77,6 +98,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <SignedOut>
             <SignInButton mode="modal">
               <button className="btn-accent !px-4 !py-1.5 text-sm">Login</button>

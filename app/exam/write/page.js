@@ -234,7 +234,7 @@ export default function WriteExamPage() {
               </p>
             </div>
 
-            <div className="flex h-12 min-w-[120px] items-center justify-center rounded-lg border border-surface bg-white px-4">
+            <div className="flex h-12 min-w-[120px] items-center justify-center rounded-lg border border-surface bg-surface-card px-4">
               <span className="font-mono text-2xl tracking-widest text-brand-darker">
                 {morseInput || <span className="text-ink/30 text-sm">...</span>}
               </span>

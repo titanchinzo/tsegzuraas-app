@@ -138,11 +138,11 @@ export default function WritePracticePage() {
             <div className="rounded-lg bg-surface-light p-3 text-xs text-ink/60">
               <p className="font-medium text-ink/90 mb-1">Гарын товчлол</p>
               <p>
-                <kbd className="rounded bg-white px-1.5 py-0.5 text-xs font-mono border border-surface">q</kbd> эсвэл{" "}
-                <kbd className="rounded bg-white px-1.5 py-0.5 text-xs font-mono border border-surface">.</kbd> = цэг
+                <kbd className="rounded bg-surface-light px-1.5 py-0.5 text-xs font-mono border border-surface">q</kbd> эсвэл{" "}
+                <kbd className="rounded bg-surface-light px-1.5 py-0.5 text-xs font-mono border border-surface">.</kbd> = цэг
                 &nbsp;&nbsp;
-                <kbd className="rounded bg-white px-1.5 py-0.5 text-xs font-mono border border-surface">w</kbd> эсвэл{" "}
-                <kbd className="rounded bg-white px-1.5 py-0.5 text-xs font-mono border border-surface">-</kbd> = зураас
+                <kbd className="rounded bg-surface-light px-1.5 py-0.5 text-xs font-mono border border-surface">w</kbd> эсвэл{" "}
+                <kbd className="rounded bg-surface-light px-1.5 py-0.5 text-xs font-mono border border-surface">-</kbd> = зураас
               </p>
             </div>
             <button onClick={startRound} className="btn-accent gap-2">
@@ -204,7 +204,7 @@ export default function WritePracticePage() {
                 </div>
 
                 {/* Одоогийн морз бичлэг */}
-                <div className="flex h-12 min-w-[120px] items-center justify-center rounded-lg border border-surface bg-white px-4">
+                <div className="flex h-12 min-w-[120px] items-center justify-center rounded-lg border border-surface bg-surface-card px-4">
                   <span className="font-mono text-2xl tracking-widest text-brand-darker">
                     {morseInput || <span className="text-ink/30 text-sm">...</span>}
                   </span>
