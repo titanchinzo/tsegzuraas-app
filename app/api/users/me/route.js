@@ -26,11 +26,24 @@ export async function GET() {
     const role = isAdminEmail(email) ? "admin" : "student";
 
     user = await User.create({ clerkId: userId, nickname, email, role });
-  } else if (isAdminEmail(user.email) && user.role !== "admin") {
-    // ADMIN_EMAILS-д байгаа хэрэглэгч өмнө нь student/teacher болж үүссэн бол
-    // автоматаар admin болгож засна (жишээ: webhook тохируулагдаагүй үед).
-    user.role = "admin";
-    await user.save();
+  } else {
+    // DB-д хадгалагдсан email нь анх буруу/хоосон бичигдсэн байвал (жишээ:
+    // webhook тохируулагдаагүй үед race condition) ADMIN_EMAILS шалгалт
+    // тасралтгүй бүтэлгүйтдэг тул Clerk-ээс одоогийн имэйлийг шинээр авч,
+    // хадгалагдсан утгыг синк хийж, admin эрхийг дахин шалгана.
+    const clerkUser = await currentUser();
+    const liveEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || "";
+    let dirty = false;
+
+    if (liveEmail && liveEmail !== user.email) {
+      user.email = liveEmail;
+      dirty = true;
+    }
+    if (isAdminEmail(liveEmail || user.email) && user.role !== "admin") {
+      user.role = "admin";
+      dirty = true;
+    }
+    if (dirty) await user.save();
   }
 
   return Response.json({ user });
