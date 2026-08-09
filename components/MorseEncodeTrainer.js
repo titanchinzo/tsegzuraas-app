@@ -152,22 +152,37 @@ export default function MorseEncodeTrainer({
 
   return (
     <div className="space-y-6">
-      {/* Кодлох текст — monkeytype маягаар бүхэлд нь харуулж, бичсэнийг өнгөөр */}
-      <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 rounded-xl bg-surface-light px-4 py-5 font-mono text-2xl tracking-widest">
+      {/* Кодлох текст — monkeytype маягаар бүхэлд нь харуулж, бичсэнийг өнгөөр.
+          Тусламж асаалттай үед үсэг бүрийн доор кодыг нь жижгээр бичнэ. */}
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 rounded-xl bg-surface-light px-4 py-5 font-mono">
         {items.map((word, wi) => (
-          <span key={wi} className="flex">
+          <span key={wi} className="flex gap-1">
             {word.split("").map((ch, ci) => {
               const idx = wordOffsets[wi] + ci;
               const r = results[idx];
 
               let cls = "text-ink/25"; // хараахан бичээгүй — бүдэг
               if (r) cls = r.correct ? "text-brand-dark" : "text-red-500";
-              else if (idx === index)
-                cls = "text-accent-dark border-b-2 border-accent animate-pulse";
+              else if (idx === index) cls = "text-accent-dark";
 
               return (
-                <span key={ci} className={`px-0.5 ${cls}`}>
-                  {ch}
+                <span key={ci} className="flex flex-col items-center">
+                  <span
+                    className={`px-0.5 text-2xl leading-tight tracking-widest ${cls} ${
+                      idx === index && !r ? "border-b-2 border-accent animate-pulse" : ""
+                    }`}
+                  >
+                    {ch}
+                  </span>
+                  {hint && (
+                    <span
+                      className={`mt-1 text-[11px] leading-none tracking-tight ${
+                        idx === index ? "text-accent-dark" : "text-ink/35"
+                      }`}
+                    >
+                      {MORSE_MAP[ch]}
+                    </span>
+                  )}
                 </span>
               );
             })}
