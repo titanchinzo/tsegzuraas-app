@@ -5,6 +5,20 @@ import { randomChars, REVERSE_MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
 import { Circle, Minus, Check, X } from "lucide-react";
 import ResultPanel from "@/components/ResultPanel";
+import ExamLeaderboard from "@/components/ExamLeaderboard";
+
+// Шалгалтын агуулга (зүүн) + дүнгийн самбар (баруун булан). lg-ээс доош
+// самбар нь агуулгын доор давхарлана.
+function ExamLayout({ type, refreshKey, children }) {
+  return (
+    <div className="mx-auto flex max-w-5xl flex-col gap-6 animate-fade-in lg:flex-row lg:items-start">
+      <div className="min-w-0 flex-1 space-y-6">{children}</div>
+      <aside className="lg:sticky lg:top-24 lg:w-64 lg:shrink-0">
+        <ExamLeaderboard type={type} refreshKey={refreshKey} />
+      </aside>
+    </div>
+  );
+}
 
 const TOTAL_ROUNDS = 5; // Макро-үений тоо
 const CHARS_PER_ROUND = 5; // Үе тус бүрийн тэмдэгтийн тоо (5x5 формат)
@@ -144,29 +158,34 @@ export default function WriteExamPage() {
 
   if (finalResult) {
     return (
-      <div className="max-w-xl mx-auto space-y-5 text-center animate-fade-in">
-        <p className="text-4xl">🏁</p>
-        <h1 className="page-title">Шалгалт дууслаа!</h1>
-        <ResultPanel
-          result={{
-            accuracy: finalResult.accuracy,
-            errors: 0,
-            wpm: finalResult.wpm,
-            durationSeconds: 0,
-          }}
-        />
-        <p className="text-ink/70">
-          Эцсийн оноо: <strong className="text-brand-darker text-lg">{finalResult.score}</strong>
-        </p>
-        {finalResult.isNewMax && (
-          <p className="badge-accent mx-auto w-fit text-sm py-1.5 px-3">🎉 Шинэ дээд амжилт тогтоолоо!</p>
-        )}
-      </div>
+      // refreshKey=1 — шалгалт хадгалагдсан тул самбарыг шинэ байртай дахин татна.
+      <ExamLayout type="write" refreshKey={1}>
+        <div className="space-y-5 text-center">
+          <p className="text-4xl">🏁</p>
+          <h1 className="page-title">Шалгалт дууслаа!</h1>
+          <ResultPanel
+            result={{
+              accuracy: finalResult.accuracy,
+              errors: 0,
+              wpm: finalResult.wpm,
+              durationSeconds: 0,
+            }}
+          />
+          <p className="text-ink/70">
+            Эцсийн оноо: <strong className="text-brand-darker text-lg">{finalResult.score}</strong>
+          </p>
+          {finalResult.isNewMax && (
+            <p className="badge-accent mx-auto w-fit text-sm py-1.5 px-3">
+              🎉 Шинэ дээд амжилт тогтоолоо!
+            </p>
+          )}
+        </div>
+      </ExamLayout>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
+    <ExamLayout type="write" refreshKey={0}>
       <div>
         <h1 className="page-title">Write Exam</h1>
         <div className="flex items-center gap-3 mt-3">
@@ -276,6 +295,6 @@ export default function WriteExamPage() {
           </div>
         )}
       </div>
-    </div>
+    </ExamLayout>
   );
 }

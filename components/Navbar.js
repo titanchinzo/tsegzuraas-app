@@ -38,7 +38,6 @@ const NAV_LINKS = [
   { href: "/listen", label: "Listen" },
   { href: "/study", label: "Study" },
   { href: "/products", label: "Products" },
-  { href: "/score", label: "Score" },
 ];
 
 function Logo() {

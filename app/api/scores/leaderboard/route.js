@@ -32,14 +32,17 @@ export async function GET() {
   const byWrite = [...combined].sort((a, b) => b.write - a.write);
   const byListen = [...combined].sort((a, b) => b.listen - a.listen);
 
+  // me-г байрнаас үл хамааран үргэлж буцаана. Хэрэглэгч хаана харагдахыг
+  // клиент шийднэ — жишээ нь шалгалтын буланд зөвхөн эхний 5-ыг үзүүлдэг тул
+  // "топ 10-д байвал me-г алгасах" нь 6-10-р байрны хүнийг хаанаас ч
+  // харагдахгүй болгодог байв.
   function withMyRank(list) {
     const top10 = list.slice(0, 10);
     if (!currentUser) return { top10, me: null };
 
     const myIndex = list.findIndex((u) => u.userId === String(currentUser._id));
-    if (myIndex === -1 || myIndex < 10) {
-      return { top10, me: null }; // Топ 10-д багтсан эсвэл огт оноогүй
-    }
+    if (myIndex === -1) return { top10, me: null }; // Огт оноогүй
+
     return { top10, me: { ...list[myIndex], rank: myIndex + 1 } };
   }
 
