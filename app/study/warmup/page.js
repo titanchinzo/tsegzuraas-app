@@ -7,10 +7,17 @@ import { MORSE_MAP, CATEGORIES } from "@/lib/morse";
 
 // Хавтан унах хугацаа. Түвшин ахих тусам богиносно (хурдасна).
 const BASE_TRAVEL_MS = 2400;
-const MIN_TRAVEL_MS = 900;
+const MIN_TRAVEL_MS = 800;
 const SYMBOL_GAP_MS = 460; // нэг тэмдэгт доторх хавтангуудын хоорондох зай
 const CHAR_GAP_MS = 900; // тэмдэгт хооронд
+const MIN_SYMBOL_GAP_MS = 200;
+const MIN_CHAR_GAP_MS = 380;
 const LIVES = 3;
+
+// Зөв товшилт бүрд бага зэрэг хурдасч, алдах бүрд сулардаг — piano tiles шиг
+// сайн тоглох тусам л хүндэрнэ.
+const SPEEDUP_PER_HIT = 22;
+const SLOWDOWN_PER_MISS = 120;
 
 // Товшилтын нарийвчлалын цонх (хавтан шугам дээр ирэх ёстой мөчөөс хазайх зөвшөөрөл).
 const WINDOW_PERFECT = 110;
@@ -18,6 +25,13 @@ const WINDOW_GOOD = 220;
 const WINDOW_OK = 330;
 
 const POOL = CATEGORIES.english.concat(CATEGORIES.numbers);
+
+// Хурдыг 1..10 түвшин болгож харуулна (унах хугацаа богиносох тусам өснө).
+function speedLevelOf(travel) {
+  const t = Math.min(BASE_TRAVEL_MS, Math.max(MIN_TRAVEL_MS, travel));
+  const ratio = (BASE_TRAVEL_MS - t) / (BASE_TRAVEL_MS - MIN_TRAVEL_MS);
+  return 1 + Math.round(ratio * 9);
+}
 
 function judge(delta) {
   const d = Math.abs(delta);
@@ -38,6 +52,7 @@ export default function WarmupPage() {
   const [currentChar, setCurrentChar] = useState(null);
   const [hits, setHits] = useState(0);
   const [best, setBest] = useState(0);
+  const [speedLevel, setSpeedLevel] = useState(1);
 
   // Тоглоомын явцын утгууд — рендер бүрд шинэчлэгдэх шаардлагагүй тул ref-д.
   const tilesRef = useRef([]);
@@ -105,6 +120,9 @@ export default function WarmupPage() {
   const loseLife = useCallback(() => {
     comboRef.current = 0;
     setCombo(0);
+    // Алдвал бага зэрэг сулруулж, эргэж орох боломж өгнө.
+    travelRef.current = Math.min(BASE_TRAVEL_MS, travelRef.current + SLOWDOWN_PER_MISS);
+    setSpeedLevel(speedLevelOf(travelRef.current));
     setFeedback({ label: "Алдлаа", tone: "text-red-600", key: Math.random() });
 
     livesRef.current -= 1;
@@ -122,6 +140,11 @@ export default function WarmupPage() {
     setCurrentChar({ char, pattern });
 
     const travel = travelRef.current;
+    // Хавтангийн зай ч хурдтай хамт нягтарна — эс бөгөөс зөвхөн унах хурд
+    // өөрчлөгдөж, хэмнэл нь хэвээрээ үлддэг.
+    const density = travel / BASE_TRAVEL_MS;
+    const symbolGap = Math.max(MIN_SYMBOL_GAP_MS, SYMBOL_GAP_MS * density);
+    const charGap = Math.max(MIN_CHAR_GAP_MS, CHAR_GAP_MS * density);
     let offset = 0;
 
     for (const symbol of pattern.split("")) {
@@ -142,12 +165,10 @@ export default function WarmupPage() {
         }, travel + WINDOW_OK);
       }, offset);
 
-      offset += SYMBOL_GAP_MS;
+      offset += symbolGap;
     }
 
-    // Түвшин ахих тусам хурдасна.
-    travelRef.current = Math.max(MIN_TRAVEL_MS, travelRef.current - 45);
-    later(scheduleChar, offset + CHAR_GAP_MS);
+    later(scheduleChar, offset + charGap);
   }, [later, loseLife, removeTile]);
 
   const start = useCallback(() => {
@@ -166,6 +187,7 @@ export default function WarmupPage() {
     setBestCombo(0);
     setHits(0);
     setLives(LIVES);
+    setSpeedLevel(1);
     setFeedback(null);
     setPhase("playing");
 
@@ -196,12 +218,15 @@ export default function WarmupPage() {
       comboRef.current = nextCombo;
       // Комбо 10 болгонд оноо нэмэгддэг үржүүлэгч.
       scoreRef.current += verdict.points * (1 + Math.floor(nextCombo / 10));
+      // Зөв товшсон бүрдээ л хурдална.
+      travelRef.current = Math.max(MIN_TRAVEL_MS, travelRef.current - SPEEDUP_PER_HIT);
 
       setFeedback({ ...verdict, key: target.id });
       setHits((h) => h + 1);
       setCombo(nextCombo);
       setBestCombo((b) => Math.max(b, nextCombo));
       setScore(scoreRef.current);
+      setSpeedLevel(speedLevelOf(travelRef.current));
     },
     [loseLife, removeTile]
   );
@@ -263,6 +288,20 @@ export default function WarmupPage() {
               {combo > 0 && <Zap className="h-4 w-4 text-accent" />}
               {combo}
             </p>
+          </div>
+          <div>
+            <p className="label">Хурд</p>
+            <div className="mt-1 flex items-center gap-2">
+              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-surface">
+                <div
+                  className="h-full rounded-full bg-accent transition-all duration-300"
+                  style={{ width: `${(speedLevel / 10) * 100}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold tabular-nums text-brand-darker">
+                {speedLevel}
+              </span>
+            </div>
           </div>
         </div>
 

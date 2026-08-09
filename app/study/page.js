@@ -37,16 +37,25 @@ function LessonCard({ lesson, stars, isNext }) {
       </div>
 
       <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-0.5 py-1">
-        {lesson.chars.slice(0, 4).map((c) => (
-          <span key={c} className="text-center">
-            <span className="block text-sm font-bold leading-none text-brand-darker">{c}</span>
-            <span className="block font-mono text-[10px] leading-tight text-ink/40">
-              {MORSE_MAP[c]}
-            </span>
+        {/* Үгийн хичээлд MORSE_MAP[үг] байхгүй тул зөвхөн үгсийг харуулна. */}
+        {lesson.words
+          ? lesson.chars.slice(0, 2).map((w) => (
+              <span key={w} className="text-sm font-bold leading-tight text-brand-darker">
+                {w}
+              </span>
+            ))
+          : lesson.chars.slice(0, 4).map((c) => (
+              <span key={c} className="text-center">
+                <span className="block text-sm font-bold leading-none text-brand-darker">{c}</span>
+                <span className="block font-mono text-[10px] leading-tight text-ink/40">
+                  {MORSE_MAP[c]}
+                </span>
+              </span>
+            ))}
+        {lesson.chars.length > (lesson.words ? 2 : 4) && (
+          <span className="text-xs font-semibold text-ink/40">
+            +{lesson.chars.length - (lesson.words ? 2 : 4)}
           </span>
-        ))}
-        {lesson.chars.length > 4 && (
-          <span className="text-xs font-semibold text-ink/40">+{lesson.chars.length - 4}</span>
         )}
       </div>
 

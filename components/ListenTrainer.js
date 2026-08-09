@@ -9,7 +9,7 @@ import { buildAttemptResult } from "@/lib/scoring";
  *
  * props:
  *  - target: string        зорилтот текст
- *  - morse: string          тохирох морзын код (" / " тусгаарлагчтай)
+ *  - morse: string          тохирох морзын код (тэмдэгт хооронд зай, үг хооронд "/")
  *  - onComplete(result)
  */
 export default function ListenTrainer({ target, morse, onComplete }) {

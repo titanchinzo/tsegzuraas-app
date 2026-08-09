@@ -1,60 +1,87 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Circle, Minus, Check, X, Delete } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Circle, Minus, Delete, Eye, EyeOff } from "lucide-react";
 import { MORSE_MAP } from "@/lib/morse";
 
-const GAP_MS = 1200;
+// Автоматаар илгээх завсар. Морзын стандарт тэмдэгт хоорондын завсар нь
+// 3 нэгж боловч товч дарж кодлоход тэр нь хэт богино тул 12 нэгж авав.
+export function commitGapMs(wpm) {
+  const unit = 1200 / Math.max(1, wpm);
+  return Math.min(3000, Math.max(250, Math.round(unit * 12)));
+}
 
 /**
- * Тэмдэгтийг цэг/зураасаар кодлох дадлага.
+ * Тэмдэгт/үгийг цэг зураасаар кодлох дадлага (monkeytype маягийн харагдац).
  *
  * props:
- *  - chars: string[]  дараалан кодлох тэмдэгтүүд
+ *  - items: string[]   кодлох нэгжүүд. Нэг үсгийн хичээлд ["A","N",...],
+ *                      үгийн хичээлд ["THE","AND",...]
+ *  - wpm: number       автоматаар илгээх завсрыг тодорхойлно
+ *  - hint: boolean     одоогийн тэмдэгтийн кодыг бүдэг харуулах эсэх
  *  - onFinish({ results, correct, total, accuracy, durationSeconds })
  *
- * Хариуг MORSE_MAP-тай ШУУД тулгаж шалгана (REVERSE_MORSE_MAP-аар тайлдаггүй) —
- * зарим тэмдэгт ижил кодтой байдаг тул буцаан тайлах нь эргэлзээ үүсгэдэг.
+ * Хариуг MORSE_MAP-тай ШУУД тулгана (буцаан тайлдаггүй) — зарим тэмдэгт ижил
+ * кодтой тул тайлалт эргэлзээтэй.
  */
-export default function MorseEncodeTrainer({ chars, onFinish }) {
+export default function MorseEncodeTrainer({
+  items,
+  wpm = 12,
+  hint: hintProp = true,
+  onFinish,
+}) {
+  // Үгсийг үсэг болгон задалж, аль үгийн хэддэх үсэг болохыг тэмдэглэнэ.
+  const letters = useMemo(() => {
+    const out = [];
+    items.forEach((word, wordIndex) => {
+      word.split("").forEach((char, indexInWord) => {
+        out.push({ char, wordIndex, indexInWord });
+      });
+    });
+    return out;
+  }, [items]);
+
   const [index, setIndex] = useState(0);
   const [input, setInput] = useState("");
   const [results, setResults] = useState([]);
   const [startedAt, setStartedAt] = useState(null);
+  const [hint, setHint] = useState(hintProp);
 
   // Санамж: setState updater дотор өөр setState дуудвал React 18 dev Strict
-  // Mode-ын давхар дуудалт бодит хажуугийн үр дагаварыг хоёр удаа ажиллуулдаг.
-  // Тиймээс явцын утгыг ref-д барьж, бүх setState-ийг цэвэр байлгана.
+  // Mode-ын давхар дуудалт хажуугийн үр дагаварыг хоёр удаа ажиллуулна.
+  // Тиймээс явцын утгыг ref-д барьж, updater-уудыг цэвэр байлгана.
   const inputRef = useRef("");
   const indexRef = useRef(0);
   const timerRef = useRef(null);
   const doneRef = useRef(false);
 
-  const total = chars.length;
-  const current = chars[index];
+  const total = letters.length;
+  const current = letters[index];
+  const expected = current ? MORSE_MAP[current.char] || "" : "";
+  const gap = commitGapMs(wpm);
 
-  useEffect(() => {
-    return () => clearTimeout(timerRef.current);
-  }, []);
+  useEffect(() => () => clearTimeout(timerRef.current), []);
 
   const commit = useCallback(() => {
     const typed = inputRef.current;
     if (!typed) return;
 
     const i = indexRef.current;
-    const expected = chars[i];
-    const correct = typed === MORSE_MAP[expected];
+    const target = letters[i];
+    if (!target) return;
 
     inputRef.current = "";
     indexRef.current = i + 1;
     setInput("");
     setIndex(i + 1);
-    setResults((prev) => [...prev, { char: expected, input: typed, correct }]);
-  }, [chars]);
+    setResults((prev) => [
+      ...prev,
+      { char: target.char, input: typed, correct: typed === MORSE_MAP[target.char] },
+    ]);
+  }, [letters]);
 
-  // Бүх тэмдэгт дуусмагц нэг л удаа мэдэгдэнэ.
   useEffect(() => {
-    if (doneRef.current || results.length < total || total === 0) return;
+    if (doneRef.current || total === 0 || results.length < total) return;
     doneRef.current = true;
 
     const correct = results.filter((r) => r.correct).length;
@@ -69,16 +96,16 @@ export default function MorseEncodeTrainer({ chars, onFinish }) {
 
   const addSymbol = useCallback(
     (symbol) => {
-      if (indexRef.current >= chars.length) return;
+      if (indexRef.current >= letters.length) return;
       if (!startedAt) setStartedAt(Date.now());
 
       inputRef.current += symbol;
       setInput(inputRef.current);
 
       clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(commit, GAP_MS);
+      timerRef.current = setTimeout(commit, gap);
     },
-    [chars.length, commit, startedAt]
+    [letters.length, commit, startedAt, gap]
   );
 
   const clearInput = useCallback(() => {
@@ -110,62 +137,74 @@ export default function MorseEncodeTrainer({ chars, onFinish }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [addSymbol, clearInput, commit]);
 
-  const finished = index >= total;
+  // Үг бүрийн эхлэх индекс — үсгийн өнгө тодорхойлоход хэрэгтэй.
+  const wordOffsets = useMemo(() => {
+    const offsets = [];
+    let acc = 0;
+    items.forEach((w) => {
+      offsets.push(acc);
+      acc += w.length;
+    });
+    return offsets;
+  }, [items]);
+
+  const extra = input.length > expected.length ? input.slice(expected.length) : "";
 
   return (
     <div className="space-y-6">
-      {/* Явцын нүднүүд */}
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {chars.map((c, i) => {
-          const r = results[i];
-          let cls = "border-surface bg-surface-light text-ink/30";
-          if (!r && i === index) cls = "border-accent bg-accent/10 text-accent-dark scale-110";
-          else if (r)
-            cls = r.correct
-              ? "border-green-400 bg-green-50 text-green-700"
-              : "border-red-400 bg-red-50 text-red-600";
+      {/* Кодлох текст — monkeytype маягаар бүхэлд нь харуулж, бичсэнийг өнгөөр */}
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 rounded-xl bg-surface-light px-4 py-5 font-mono text-2xl tracking-widest">
+        {items.map((word, wi) => (
+          <span key={wi} className="flex">
+            {word.split("").map((ch, ci) => {
+              const idx = wordOffsets[wi] + ci;
+              const r = results[idx];
 
-          return (
-            <div
-              key={i}
-              className={`relative flex h-11 w-11 items-center justify-center rounded-lg border-2 text-base font-bold transition-all ${cls}`}
-            >
-              {r ? (
-                <>
-                  <span>{r.char}</span>
-                  <span
-                    className={`absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white ${
-                      r.correct ? "bg-green-500" : "bg-red-500"
-                    }`}
-                  >
-                    {r.correct ? (
-                      <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                    ) : (
-                      <X className="h-2.5 w-2.5" strokeWidth={3} />
-                    )}
-                  </span>
-                </>
-              ) : (
-                <span className="text-xs">{i + 1}</span>
-              )}
-            </div>
-          );
-        })}
+              let cls = "text-ink/25"; // хараахан бичээгүй — бүдэг
+              if (r) cls = r.correct ? "text-brand-dark" : "text-red-500";
+              else if (idx === index)
+                cls = "text-accent-dark border-b-2 border-accent animate-pulse";
+
+              return (
+                <span key={ci} className={`px-0.5 ${cls}`}>
+                  {ch}
+                </span>
+              );
+            })}
+          </span>
+        ))}
       </div>
 
-      {!finished && (
+      {index < total && (
         <div className="flex flex-col items-center gap-4">
-          <div className="flex min-w-[180px] flex-col items-center gap-1 rounded-2xl bg-brand-darker px-10 py-4">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
-              Кодлох тэмдэгт
-            </span>
-            <p className="font-mono text-4xl font-bold leading-tight text-white">{current}</p>
-          </div>
+          {/* Одоогийн тэмдэгтийн код: бүдэг ghost дээр бичсэнээ давхарлана */}
+          <div className="flex min-h-[52px] items-center justify-center gap-1.5 font-mono text-3xl">
+            {hint ? (
+              expected.split("").map((sym, i) => {
+                const typed = input[i];
+                if (typed === undefined)
+                  return (
+                    <span key={i} className="text-ink/15">
+                      {sym}
+                    </span>
+                  );
+                return (
+                  <span key={i} className={typed === sym ? "text-brand-dark" : "text-red-500"}>
+                    {typed}
+                  </span>
+                );
+              })
+            ) : input ? (
+              <span className="tracking-widest text-brand-darker">{input}</span>
+            ) : (
+              <span className="text-sm text-ink/30">...</span>
+            )}
 
-          <div className="flex h-12 min-w-[140px] items-center justify-center rounded-lg border border-surface bg-surface-card px-4">
-            <span className="font-mono text-2xl tracking-widest text-brand-darker">
-              {input || <span className="text-sm text-ink/30">...</span>}
-            </span>
+            {extra.split("").map((sym, i) => (
+              <span key={`x${i}`} className="text-red-500">
+                {sym}
+              </span>
+            ))}
           </div>
 
           <div className="flex items-center gap-4">
@@ -196,21 +235,31 @@ export default function MorseEncodeTrainer({ chars, onFinish }) {
             </button>
           </div>
 
-          <p className="text-center text-xs text-ink/50">
-            Түр зогсоход автоматаар илгээнэ &middot;{" "}
-            <kbd className="rounded border border-surface bg-surface-light px-1 py-0.5 font-mono text-xs">
-              q
-            </kbd>{" "}
-            цэг{" "}
-            <kbd className="rounded border border-surface bg-surface-light px-1 py-0.5 font-mono text-xs">
-              w
-            </kbd>{" "}
-            зураас{" "}
-            <kbd className="rounded border border-surface bg-surface-light px-1 py-0.5 font-mono text-xs">
-              ⌫
-            </kbd>{" "}
-            арилгах
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-ink/50">
+            <button
+              type="button"
+              onClick={() => setHint((h) => !h)}
+              className="inline-flex items-center gap-1 transition-colors hover:text-brand-dark"
+            >
+              {hint ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {hint ? "Тусламж нуух" : "Тусламж харуулах"}
+            </button>
+            <span>·</span>
+            <span>
+              <kbd className="rounded border border-surface bg-surface-card px-1 py-0.5 font-mono">
+                q
+              </kbd>{" "}
+              цэг{" "}
+              <kbd className="rounded border border-surface bg-surface-card px-1 py-0.5 font-mono">
+                w
+              </kbd>{" "}
+              зураас{" "}
+              <kbd className="rounded border border-surface bg-surface-card px-1 py-0.5 font-mono">
+                ⌫
+              </kbd>{" "}
+              арилгах
+            </span>
+          </div>
         </div>
       )}
     </div>
