@@ -35,6 +35,7 @@ function StatusMessage({ status }) {
 function LessonUploadForm() {
   const [form, setForm] = useState({ title: "", videoUrl: "", description: "" });
   const [status, setStatus] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   async function submit(e) {
     e.preventDefault();
@@ -60,7 +61,8 @@ function LessonUploadForm() {
       <FileUpload
         accept="video/*"
         label="Видео хуулах"
-        onUploaded={(url) => setForm({ ...form, videoUrl: url })}
+        onBusyChange={setUploading}
+        onUploaded={(url) => setForm((f) => ({ ...f, videoUrl: url }))}
       />
       <input
         placeholder="Видео URL (эсвэл дээр хуулна уу)"
@@ -75,7 +77,9 @@ function LessonUploadForm() {
         className="input"
         rows={3}
       />
-      <button className="btn-primary">Нэмэх</button>
+      <button className="btn-primary" disabled={uploading}>
+        {uploading ? "Видео хуулж байна..." : "Нэмэх"}
+      </button>
     </form>
   );
 }

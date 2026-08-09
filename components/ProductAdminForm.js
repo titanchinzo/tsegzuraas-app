@@ -7,6 +7,7 @@ export default function ProductAdminForm({ onCreated }) {
   const [form, setForm] = useState({ name: "", price: "", description: "", imageUrl: "", stock: "" });
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -58,6 +59,7 @@ export default function ProductAdminForm({ onCreated }) {
       <FileUpload
         accept="image/*"
         label="Зураг хуулах"
+        onBusyChange={setUploading}
         onUploaded={(url) => update("imageUrl", url)}
       />
       <input
@@ -81,8 +83,8 @@ export default function ProductAdminForm({ onCreated }) {
         rows={3}
       />
 
-      <button type="submit" disabled={saving} className="btn-primary">
-        {saving ? "Хадгалж байна..." : "Нэмэх"}
+      <button type="submit" disabled={saving || uploading} className="btn-primary">
+        {uploading ? "Зураг хуулж байна..." : saving ? "Хадгалж байна..." : "Нэмэх"}
       </button>
     </form>
   );
