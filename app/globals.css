@@ -38,8 +38,12 @@ body {
   border-radius: 4px;
 }
 
+/* w-full зайлшгүй: <main> нь body-ийн grid item учир mx-auto нь stretch-ийг
+   цуцалж, багана нь агуулгынхаа хэрээр агшдаг. Улмаас хуудасны өргөн хамгийн
+   урт мөрийн уртаас хамаарч хэлбэлзэж, богино тексттэй хуудсан дээр видео
+   зэрэг элемент хэт жижигрэх асуудал үүсдэг байв. */
 .container-page {
-  @apply max-w-6xl mx-auto px-4 sm:px-6;
+  @apply w-full max-w-6xl mx-auto px-4 sm:px-6;
 }
 
 /* Buttons */

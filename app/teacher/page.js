@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import FileUpload from "@/components/FileUpload";
+import LessonVideo from "@/components/LessonVideo";
 
 // Багшийн удирдлагын самбар: Видео хичээл оруулах, Шалгалтын асуулт оруулах,
 // Сурагч нэмэх (spec §2 permissions: Teacher only). Эрхийн шалгалтыг
 // API талд (requireRole) хийдэг тул энд UI-г л харуулна.
 export default function TeacherDashboardPage() {
   return (
-    <div className="space-y-8 max-w-2xl animate-fade-in">
+    <div className="space-y-8 max-w-2xl mx-auto animate-fade-in">
       <h1 className="page-title">🧑‍🏫 Багшийн самбар</h1>
       <LessonUploadForm />
       <ExamQuestionForm />
@@ -65,11 +66,18 @@ function LessonUploadForm() {
         onUploaded={(url) => setForm((f) => ({ ...f, videoUrl: url }))}
       />
       <input
-        placeholder="Видео URL (эсвэл дээр хуулна уу)"
+        placeholder="YouTube линк эсвэл видео URL"
         value={form.videoUrl}
         onChange={(e) => setForm({ ...form, videoUrl: e.target.value })}
         className="input"
       />
+
+      {form.videoUrl.trim() && (
+        <div className="space-y-1.5">
+          <p className="label">Урьдчилан харах</p>
+          <LessonVideo url={form.videoUrl} title={form.title} />
+        </div>
+      )}
       <textarea
         placeholder="Тайлбар"
         value={form.description}

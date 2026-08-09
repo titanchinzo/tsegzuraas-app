@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import LessonVideo from "@/components/LessonVideo";
 
 // Хичээл (Lesson) үзэх — Teacher, Student эрхтэй (spec §2 permissions table)
 export default function LessonsPage() {
@@ -36,7 +37,7 @@ export default function LessonsPage() {
             <p className="text-sm text-ink/50 mb-3">
               Багш: {lesson.teacherId?.nickname || "—"}
             </p>
-            <video src={lesson.videoUrl} controls className="w-full rounded-lg" />
+            <LessonVideo url={lesson.videoUrl} title={lesson.title} />
             <p className="text-sm text-ink/70 mt-3 leading-relaxed">{lesson.description}</p>
           </div>
         ))}

@@ -4,7 +4,7 @@ const LessonSchema = new Schema(
   {
     teacherId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     title: { type: String, required: true },
-    videoUrl: { type: String, required: true }, // Cloudinary линк
+    videoUrl: { type: String, required: true }, // YouTube линк эсвэл Cloudinary файл
     description: { type: String, default: "" },
   },
   { timestamps: true }
