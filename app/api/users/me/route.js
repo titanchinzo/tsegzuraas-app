@@ -1,9 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { connectDB } from "@/lib/db";
+import { isAdminEmail } from "@/lib/auth";
 import User from "@/models/User";
-
-const ADMIN_EMAILS = ["titaniumchinzo@gmail.com"];
-const isAdminEmail = (email) => ADMIN_EMAILS.includes((email || "").trim().toLowerCase());
 
 // Clerk хэрэглэгчийн ХАМГИЙН ТОХИРОХ имэйлийг олно: эхлээд ADMIN_EMAILS-тэй
 // таарч буй аль ч имэйл байвал үүнийг сонгоно (тэргүүлэх/анхны имэйл гэдэг

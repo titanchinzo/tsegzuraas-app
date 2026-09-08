@@ -1,6 +1,7 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { connectDB } from "@/lib/db";
+import { isAdminEmail } from "@/lib/auth";
 import User from "@/models/User";
 
 // Clerk-ээс хэрэглэгч үүсэх/шинэчлэгдэх үед дуудагдана.
@@ -51,11 +52,8 @@ export async function POST(req) {
       (data.email_addresses?.[0]?.email_address?.split("@")[0]) ||
       "Хэрэглэгч";
 
-    const ADMIN_EMAILS = ["titaniumchinzo@gmail.com"];
     const emails = data.email_addresses || [];
-    const adminMatch = emails.find((e) =>
-      ADMIN_EMAILS.includes((e.email_address || "").trim().toLowerCase())
-    );
+    const adminMatch = emails.find((e) => isAdminEmail(e.email_address));
     const primary = emails.find((e) => e.id === data.primary_email_address_id);
     const email = adminMatch?.email_address || primary?.email_address || emails[0]?.email_address || "";
     const role = adminMatch ? "admin" : "student";
