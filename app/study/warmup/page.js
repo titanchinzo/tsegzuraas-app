@@ -324,7 +324,7 @@ export default function WarmupPage() {
 
         {/* Товших бүс: хавтангийн доод ирмэг энэ шугам дээр ирэх ёстой. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-[72px] z-10 h-12 -translate-y-full rounded-lg border-2 border-dashed border-accent/25" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-[72px] z-10 h-1 rounded-full bg-accent shadow-[0_0_12px_rgba(200,150,62,0.6)]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-[72px] z-10 h-1 rounded-full bg-accent shadow-[0_0_12px_rgba(13,148,136,0.6)]" />
 
         {/* Унаж буй хавтангууд */}
         {tiles.map((t) => (

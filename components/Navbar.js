@@ -44,7 +44,7 @@ function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 shrink-0">
       <span className="flex items-center gap-1">
-        <span className="h-2 w-2 rounded-full bg-accent" />
+        <span className="h-2 w-2 rounded-full bg-accent animate-signal-pulse" />
         <span className="h-2 w-4 rounded-full bg-accent" />
       </span>
       <span className="text-lg font-bold tracking-wide text-white">

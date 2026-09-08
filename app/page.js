@@ -1,7 +1,7 @@
 function KeyIcon() {
   return (
     <span className="flex items-center gap-1">
-      <span className="h-2.5 w-2.5 rounded-full bg-accent" />
+      <span className="h-2.5 w-2.5 rounded-full bg-accent animate-signal-pulse" />
       <span className="h-2.5 w-6 rounded-full bg-accent" />
     </span>
   );
@@ -11,14 +11,11 @@ export default function HomePage() {
   return (
     <div className="space-y-16">
       <section className="relative overflow-hidden rounded-3xl bg-brand-darker text-white px-6 py-16 md:py-24 text-center">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-20"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 20%, rgba(200,150,62,0.5), transparent 40%), radial-gradient(circle at 80% 60%, rgba(143,179,160,0.4), transparent 45%)",
-          }}
-        />
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <span className="absolute -top-20 -left-10 h-72 w-72 rounded-full bg-accent/30 blur-3xl animate-drift" />
+          <span className="absolute -bottom-24 -right-10 h-80 w-80 rounded-full bg-brand-300/25 blur-3xl animate-drift-slow" />
+          <span className="absolute top-1/3 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-accent-light/10 blur-3xl animate-drift-slow" />
+        </div>
         <div className="relative space-y-6">
           <div className="flex justify-center">
             <KeyIcon />

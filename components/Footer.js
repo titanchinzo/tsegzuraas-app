@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="container-page py-12 grid gap-10 md:grid-cols-3 text-sm">
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <span className="h-2 w-2 rounded-full bg-accent" />
+            <span className="h-2 w-2 rounded-full bg-accent animate-signal-pulse" />
             <span className="h-2 w-4 rounded-full bg-accent" />
             <span className="font-bold text-white">tsegzuraas.mn</span>
           </div>

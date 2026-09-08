@@ -3,19 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --page: 100 9% 96%;
+  --page: 215 9% 96%;
   --surface-card: 0 0% 100%;
-  --surface: 100 6% 90%;
-  --surface-light: 100 9% 96%;
-  --ink: 144 8% 11%;
+  --surface: 215 6% 90%;
+  --surface-light: 215 9% 96%;
+  --ink: 215 10% 11%;
 }
 
 .dark {
-  --page: 164 22% 7%;
-  --surface-card: 164 16% 11%;
-  --surface: 164 12% 22%;
-  --surface-light: 164 14% 15%;
-  --ink: 150 15% 92%;
+  --page: 215 28% 7%;
+  --surface-card: 215 20% 11%;
+  --surface: 215 14% 23%;
+  --surface-light: 215 16% 15%;
+  --ink: 210 15% 92%;
 }
 
 html,
@@ -159,11 +159,11 @@ body {
    өнгийг dark mode-д уншигдахуйц болгоно — bg-brand-dark(er) өөрөө хоёр
    горимд ижил хэвээр үлдэнэ (доторх текст л зохицуулагдана). */
 .dark .text-brand-darker {
-  color: hsl(152 30% 88%);
+  color: hsl(210 55% 88%);
 }
 .dark .text-brand-dark {
-  color: hsl(152 26% 78%);
+  color: hsl(210 48% 78%);
 }
 .dark .text-accent-dark {
-  color: hsl(36 61% 68%);
+  color: hsl(173 55% 68%);
 }
