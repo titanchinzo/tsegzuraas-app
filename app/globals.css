@@ -21,6 +21,7 @@
 html,
 body {
   @apply bg-page text-ink;
+  overflow-x: hidden;
 }
 
 * {
@@ -70,31 +71,34 @@ body {
 
 /* Buttons */
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-2 bg-brand-dark text-white px-5 py-2.5 rounded-lg font-medium
+  @apply inline-flex items-center justify-center gap-2 bg-brand-dark text-white px-5 py-2.5 rounded-md
+    font-semibold text-sm uppercase tracking-wide
     shadow-soft hover:bg-brand-darker hover:shadow-lift active:scale-[0.98]
     transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none disabled:shadow-none;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 bg-surface-card text-brand-darker px-5 py-2.5 rounded-lg font-medium
+  @apply inline-flex items-center justify-center gap-2 bg-surface-card text-brand-darker px-5 py-2.5 rounded-md
+    font-semibold text-sm uppercase tracking-wide
     border border-surface hover:border-brand-300 hover:bg-brand-50 active:scale-[0.98]
     transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
 }
 
 .btn-accent {
-  @apply inline-flex items-center justify-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg font-medium
+  @apply inline-flex items-center justify-center gap-2 bg-accent text-white px-5 py-2.5 rounded-md
+    font-semibold text-sm uppercase tracking-wide
     shadow-soft hover:bg-accent-dark hover:shadow-lift active:scale-[0.98]
     transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none;
 }
 
 .btn-ghost {
-  @apply inline-flex items-center justify-center gap-1.5 text-brand-darker font-medium
+  @apply inline-flex items-center justify-center gap-1.5 text-brand-darker font-semibold text-sm uppercase tracking-wide
     hover:text-accent-dark transition-colors duration-150;
 }
 
 /* Surfaces */
 .card {
-  @apply bg-surface-card border border-surface rounded-2xl shadow-soft;
+  @apply bg-surface-card border border-surface rounded-xl shadow-soft;
 }
 
 .card-hover {
@@ -126,16 +130,21 @@ body {
 
 /* Section heading */
 .page-title {
-  @apply text-2xl md:text-3xl font-bold text-brand-darker tracking-tight;
+  @apply font-display text-3xl md:text-4xl font-bold text-brand-darker tracking-tight;
 }
 
 .page-subtitle {
   @apply text-ink/60 text-sm mt-1.5 leading-relaxed;
 }
 
+/* Жижиг uppercase шошго — гарчгийн дээр байрлана (SpaceX маягийн "eyebrow") */
+.eyebrow {
+  @apply text-xs font-bold uppercase tracking-[0.2em] text-accent-dark;
+}
+
 /* Segmented control */
 .segmented-btn {
-  @apply px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors duration-150;
+  @apply px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide border transition-colors duration-150;
 }
 
 .segmented-btn-active {
@@ -152,7 +161,7 @@ body {
 }
 
 .modal-panel {
-  @apply bg-surface-card rounded-2xl p-6 w-full shadow-lift animate-scale-in;
+  @apply bg-surface-card rounded-xl p-6 w-full shadow-lift animate-scale-in;
 }
 
 /* Бараан дэвсгэр дээрх (nav/footer/hero/pill) элементэд зориулсан текст

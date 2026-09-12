@@ -10,26 +10,27 @@ function KeyIcon() {
 export default function HomePage() {
   return (
     <div className="space-y-16">
-      <section className="relative overflow-hidden rounded-3xl bg-brand-darker text-white px-6 py-16 md:py-24 text-center">
+      <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-brand-darker text-white px-6 py-24 md:py-36 text-center">
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <span className="absolute -top-20 -left-10 h-72 w-72 rounded-full bg-accent/30 blur-3xl animate-drift" />
           <span className="absolute -bottom-24 -right-10 h-80 w-80 rounded-full bg-brand-300/25 blur-3xl animate-drift-slow" />
           <span className="absolute top-1/3 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-accent-light/10 blur-3xl animate-drift-slow" />
         </div>
-        <div className="relative space-y-6">
+        <div className="relative mx-auto max-w-4xl space-y-7">
           <div className="flex justify-center">
             <KeyIcon />
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight max-w-3xl mx-auto">
-            Цэг Зураас — Морзын кодын{" "}
-            <span className="text-accent">цахим сургалтын систем</span>
+          <p className="eyebrow">Морзын кодын цахим сургалт</p>
+          <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight">
+            Цэг Зураас
           </h1>
-          <p className="max-w-2xl mx-auto text-white/70 leading-relaxed">
-            Телеграфын түлхүүр ашиглан морзын кодоор бичих, дадлага хийх
-            боломжоор хангаж, сургалтын орчныг бүрдүүлэх зорилготой цахим
-            платформ.
+          <p className="max-w-2xl mx-auto text-lg text-white/70 leading-relaxed">
+            Телеграфын түлхүүр ашиглан{" "}
+            <span className="text-accent font-semibold">морзын кодоор бичих</span>,
+            дадлага хийх боломжоор хангаж, сургалтын орчныг бүрдүүлэх
+            зорилготой цахим платформ.
           </p>
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
+          <div className="flex flex-wrap justify-center gap-3 pt-4">
             <a href="/write" className="btn-accent">
               Дадлага эхлүүлэх →
             </a>
@@ -74,7 +75,7 @@ function FeatureCard({ icon, title, desc, href }) {
   return (
     <a href={href} className="card card-hover p-7 block group">
       <span className="text-3xl">{icon}</span>
-      <h2 className="text-lg font-semibold text-brand-darker mt-4 mb-1.5 flex items-center gap-2">
+      <h2 className="font-display text-lg font-bold text-brand-darker mt-4 mb-1.5 flex items-center gap-2">
         {title}
         <span className="text-accent opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 -translate-x-1 transition-all duration-200">
           →

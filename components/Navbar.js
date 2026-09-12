@@ -47,7 +47,7 @@ function Logo() {
         <span className="h-2 w-2 rounded-full bg-accent animate-signal-pulse" />
         <span className="h-2 w-4 rounded-full bg-accent" />
       </span>
-      <span className="text-lg font-bold tracking-wide text-white">
+      <span className="font-display text-lg font-bold tracking-wide text-white">
         tsegzuraas<span className="text-accent">.mn</span>
       </span>
     </Link>
@@ -77,16 +77,16 @@ export default function Navbar() {
       <div className="container-page flex items-center justify-between py-3.5">
         <Logo />
 
-        <nav className="hidden lg:flex items-center gap-1 text-sm">
+        <nav className="hidden lg:flex items-center gap-1 text-xs uppercase tracking-wide">
           {links.map((link) => {
             const active = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-3 py-1.5 rounded-full transition-colors duration-150 ${
+                className={`px-3 py-1.5 rounded-full font-semibold transition-colors duration-150 ${
                   active
-                    ? "bg-white/10 text-white font-medium"
+                    ? "bg-white/10 text-white"
                     : "text-white/70 hover:text-white hover:bg-white/5"
                 }`}
               >
@@ -96,11 +96,11 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <ThemeToggle />
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="btn-accent !px-4 !py-1.5 text-sm">Login</button>
+              <button className="btn-accent !px-3 sm:!px-4 !py-1.5 !text-xs sm:!text-sm !tracking-normal">Login</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
@@ -110,7 +110,7 @@ export default function Navbar() {
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Цэс нээх"
-            className="lg:hidden flex flex-col justify-center gap-1.5 h-9 w-9 rounded-lg hover:bg-white/10 transition-colors"
+            className="lg:hidden flex flex-col justify-center gap-1.5 h-9 w-9 shrink-0 rounded-lg hover:bg-white/10 transition-colors"
           >
             <span
               className={`block h-0.5 w-5 mx-auto bg-white transition-transform duration-200 ${
@@ -141,9 +141,9 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className={`px-3 py-2.5 rounded-lg text-sm transition-colors duration-150 ${
+                  className={`px-3 py-2.5 rounded-lg text-xs uppercase tracking-wide font-semibold transition-colors duration-150 ${
                     active
-                      ? "bg-white/10 text-white font-medium"
+                      ? "bg-white/10 text-white"
                       : "text-white/70 hover:text-white hover:bg-white/5"
                   }`}
                 >

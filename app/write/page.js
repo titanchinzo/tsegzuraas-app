@@ -109,7 +109,7 @@ export default function WritePracticePage() {
           <PenTool className="h-6 w-6 text-accent-dark" />
         </div>
         <h1 className="page-title">Write</h1>
-        <p className="page-subtitle">Тэмдэгтийг морзын кодоор кодлох дадлага</p>
+        <p className="page-subtitle">Тэмдэгтийг морзын кодоор бичих дадлага</p>
       </div>
 
       {/* Хурдны slider */}
@@ -133,7 +133,7 @@ export default function WritePracticePage() {
         {!started ? (
           <div className="flex flex-col items-center gap-4 py-8">
             <p className="text-ink/60 text-center">
-              Систем random тэмдэгт харуулна. Тэмдэгт бүрийг морзын кодоор кодлоно уу.
+              Систем санамсаргүй тэмдэгт харуулна. Тэмдэгт бүрийг морзын кодоор бичнэ үү.
             </p>
             <div className="rounded-lg bg-surface-light p-3 text-xs text-ink/60">
               <p className="font-medium text-ink/90 mb-1">Гарын товчлол</p>

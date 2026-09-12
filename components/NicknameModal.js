@@ -44,7 +44,7 @@ export default function NicknameModal() {
         <div className="text-center space-y-1">
           <h2 className="text-lg font-bold text-brand-darker">Тавтай морил!</h2>
           <p className="text-sm text-ink/60">
-            Эхлэхийн өмнө өөртөө Nickname (хоч нэр) сонгоно уу.
+            Эхлэхийн өмнө өөртөө хоч нэр сонгоно уу.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -53,7 +53,7 @@ export default function NicknameModal() {
             autoFocus
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder="Nickname"
+            placeholder="Хоч нэр"
             className="input text-center"
             maxLength={30}
             required

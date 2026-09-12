@@ -6,7 +6,7 @@ export default function Footer() {
           <div className="flex items-center gap-2 mb-3">
             <span className="h-2 w-2 rounded-full bg-accent animate-signal-pulse" />
             <span className="h-2 w-4 rounded-full bg-accent" />
-            <span className="font-bold text-white">tsegzuraas.mn</span>
+            <span className="font-display font-bold text-white">tsegzuraas.mn</span>
           </div>
           <p className="text-white/60 leading-relaxed">
             Цэг Зураас нь телеграфын түлхүүр ашиглан Морзын кодоор бичих
@@ -15,28 +15,25 @@ export default function Footer() {
         </div>
 
         <div>
-          <h3 className="font-semibold mb-3 text-white/90">Холбоо барих</h3>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-3 text-white/50">Холбоо барих</h3>
           <p className="text-white/60">info@tsegzuraas.mn</p>
           <p className="text-white/60">+976 0000-0000</p>
         </div>
 
         <div>
-          <h3 className="font-semibold mb-3 text-white/90">Захидал илгээх</h3>
+          <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-3 text-white/50">Захидал илгээх</h3>
           <form className="flex flex-col gap-2.5">
             <input
               type="email"
               placeholder="Таны и-мэйл"
-              className="px-3.5 py-2 rounded-lg text-ink bg-white/95 border border-white/10 placeholder:text-ink/40 focus:bg-white transition-colors text-sm"
+              className="px-3.5 py-2 rounded-md text-ink bg-white/95 border border-white/10 placeholder:text-ink/40 focus:bg-white transition-colors text-sm"
             />
             <textarea
               placeholder="Зурвас..."
               rows={2}
-              className="px-3.5 py-2 rounded-lg text-ink bg-white/95 border border-white/10 placeholder:text-ink/40 focus:bg-white transition-colors text-sm resize-none"
+              className="px-3.5 py-2 rounded-md text-ink bg-white/95 border border-white/10 placeholder:text-ink/40 focus:bg-white transition-colors text-sm resize-none"
             />
-            <button
-              type="submit"
-              className="bg-accent hover:bg-accent-dark transition-colors px-4 py-2 rounded-lg w-fit font-medium text-sm"
-            >
+            <button type="submit" className="btn-accent w-fit !px-4 !py-2">
               Илгээх
             </button>
           </form>

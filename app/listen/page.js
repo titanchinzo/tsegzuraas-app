@@ -24,7 +24,7 @@ export default function ListenPracticePage() {
       <div>
         <h1 className="page-title">🎧 Listen — Сонсох дадлага</h1>
         <p className="page-subtitle">
-          Random 5 тэмдэгтийн морзын дууг сонсоод бичнэ.
+          Санамсаргүй сонгосон 5 тэмдэгтийн морзын дууг сонсоод бичнэ үү.
         </p>
       </div>
 

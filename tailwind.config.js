@@ -38,6 +38,7 @@ module.exports = {
       fontFamily: {
         sans: ["var(--font-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
+        display: ["var(--font-display)", "var(--font-sans)", "ui-sans-serif", "sans-serif"],
       },
       gridTemplateRows: {
         layout: "auto 1fr auto", // Header / Content / Footer (3/1 structure)
