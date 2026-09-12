@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import FileUpload from "@/components/FileUpload";
 import LessonVideo from "@/components/LessonVideo";
+import { formatInGroups } from "@/lib/morse";
 
 // Багшийн удирдлагын самбар: Видео хичээл оруулах/устгах, Шалгалтын асуулт
 // оруулах, Сурагч нэмэх/хасах (spec §2 permissions: Teacher only). Эрхийн
@@ -180,11 +181,12 @@ function ExamQuestionManagement() {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="font-bold text-brand-darker">Шалгалтын агуулга</h2>
+        <h2 className="font-bold text-brand-darker">Шалгалтын агуулга (Teacher Write/Listen)</h2>
         <p className="text-sm text-ink/50 mt-1">
-          Write/Listen шалгалт өгөхөд энд оруулсан текстээс санамсаргүй сонгож
-          өгнө (5-аар бүлэглэгдэнэ). Зөвхөн таны сурагчид (Миний сурагчид
-          хэсэгт нэмсэн) энэ агуулгаар шалгалт өгнө.
+          Энд оруулсан текстээс санамсаргүй сонгож "Teacher Write/Listen"
+          шалгалтад өгнө — random Write/Listen Exam-тай (rank-тай) огт
+          хамааралгүй, зөвхөн таны сурагчид (Миний сурагчид хэсэгт нэмсэн)
+          үзнэ. Бичих явцад 5 тэмдэгт болгонд автоматаар зай авна.
         </p>
       </div>
 
@@ -198,11 +200,12 @@ function ExamQuestionManagement() {
           <option value="write">Write</option>
           <option value="listen">Listen</option>
         </select>
-        <input
-          placeholder="Тэмдэгт эсвэл үг (жиш: K3XQP)"
+        <textarea
+          placeholder="Тэмдэгтүүд (жиш: K3XQP N8ZRT L5MWY...) — бичих явцад 5-аар автоматаар зайлна"
           value={form.text}
-          onChange={(e) => setForm({ ...form, text: e.target.value })}
-          className="input"
+          onChange={(e) => setForm({ ...form, text: formatInGroups(e.target.value, 5) })}
+          className="input font-mono"
+          rows={4}
         />
         <button className="btn-primary">Нэмэх</button>
       </form>
@@ -235,6 +238,7 @@ function ExamQuestionManagement() {
 function ListenExamSettingsForm() {
   const [wpm, setWpm] = useState(20);
   const [frequency, setFrequency] = useState(600);
+  const [secondsPerGroup, setSecondsPerGroup] = useState(6);
   const [status, setStatus] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -245,6 +249,7 @@ function ListenExamSettingsForm() {
         if (!data) return;
         setWpm(data.wpm);
         setFrequency(data.frequency);
+        setSecondsPerGroup(data.secondsPerGroup);
       });
   }, []);
 
@@ -254,7 +259,7 @@ function ListenExamSettingsForm() {
     const res = await fetch("/api/exam/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ wpm, frequency }),
+      body: JSON.stringify({ wpm, frequency, secondsPerGroup }),
     });
     setStatus(res.ok ? { ok: true, text: "Хадгалагдлаа." } : { ok: false, text: "Алдаа гарлаа." });
     setSaving(false);
@@ -265,7 +270,8 @@ function ListenExamSettingsForm() {
       <div>
         <h2 className="font-bold text-brand-darker">Listen шалгалтын дуу</h2>
         <p className="text-sm text-ink/50 mt-1">
-          Шалгалт өгөх үед сурагч энэ хурд, өнгөөр л сонсоно (өөрөө өөрчлөх боломжгүй).
+          Write/Listen Exam болон Teacher Write/Listen хоёуланд ашиглагдана.
+          Сурагч энэ хурд, өнгөөр л сонсоно (өөрөө өөрчлөх боломжгүй).
           Тэмдэгтийг радио дуудлагын хэвшлээр 5-аар нь бүлэглэж тоглуулна.
         </p>
       </div>
@@ -292,6 +298,19 @@ function ListenExamSettingsForm() {
           step="10"
           value={frequency}
           onChange={(e) => setFrequency(Number(e.target.value))}
+          className="accent-accent"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1.5 text-sm text-ink/70">
+        Teacher Listen — бүлэг тус бүрд өгөх хугацаа:{" "}
+        <span className="font-semibold text-brand-darker">{secondsPerGroup}с</span>
+        <input
+          type="range"
+          min="2"
+          max="30"
+          value={secondsPerGroup}
+          onChange={(e) => setSecondsPerGroup(Number(e.target.value))}
           className="accent-accent"
         />
       </label>

@@ -1,20 +1,16 @@
-import { connectDB } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
-import { formatInGroups, textToMorse } from "@/lib/morse";
-import ExamQuestion from "@/models/ExamQuestion";
-import Student from "@/models/Student";
+import { auth } from "@clerk/nextjs/server";
+import { randomChars, formatInGroups, CATEGORIES, textToMorse } from "@/lib/morse";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/exam/round?type=write|listen
-// Нэг үений шалгалтын текстийг Багшийн ExamQuestion сангаас санамсаргүй
-// сонгоно. Student бол зөвхөн өөрийг сурагчаараа нэмсэн багш нарын
-// агуулгаас сонгогдоно (Admin бол бүх багшийн сангаас, турших зорилгоор).
-// Listen текстийг радио дуудлагын хэвшлээр (Morse Runner шиг) 5-аар
-// бүлэглэж буцаана.
+// Write/Listen Exam (rank/leaderboard-той, багшаас үл хамаарах) -ийн нэг
+// үений random текст үүсгэнэ. Listen нь радио дуудлагын хэвшлээр (Morse
+// Runner шиг) 5-аар бүлэглэгдэнэ. Багшийн өөрийн шалгалт (roster-оор
+// шүүгдсэн) энэ endpoint-той огт хамааралгүй — /api/exam/teacher-round.
 export async function GET(req) {
-  const user = await getCurrentUser();
-  if (!user) {
+  const { userId } = auth();
+  if (!userId) {
     return Response.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
   }
 
@@ -24,32 +20,15 @@ export async function GET(req) {
     return Response.json({ error: "type=write эсвэл listen байх ёстой" }, { status: 400 });
   }
 
-  await connectDB();
-
-  const match = { type };
-  if (user.role === "student") {
-    const links = await Student.find({ studentId: user._id }, "teacherId");
-    match.teacherId = { $in: links.map((l) => l.teacherId) };
-  }
-
-  const [question] = await ExamQuestion.aggregate([
-    { $match: match },
-    { $sample: { size: 1 } },
-  ]);
-
-  if (!question) {
-    return Response.json(
-      { error: "Танай багш одоогоор шалгалтын агуулга оруулаагүй байна." },
-      { status: 404 }
-    );
-  }
-
-  const text = question.text.toUpperCase();
+  const pool = CATEGORIES.english.concat(CATEGORIES.numbers);
 
   if (type === "listen") {
-    const grouped = formatInGroups(text, 5);
-    return Response.json({ text: grouped, morse: textToMorse(grouped) });
+    const groupCount = 2 + Math.floor(Math.random() * 2); // 2-3 бүлэг
+    const text = formatInGroups(randomChars(groupCount * 5, pool), 5);
+    return Response.json({ text, morse: textToMorse(text) });
   }
 
+  const length = 10 + Math.floor(Math.random() * 6); // 10-15
+  const text = randomChars(length, pool);
   return Response.json({ text });
 }
