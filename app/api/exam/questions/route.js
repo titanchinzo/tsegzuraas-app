@@ -1,9 +1,16 @@
 import { connectDB } from "@/lib/db";
-import { requireRole } from "@/lib/auth";
+import { getCurrentUser, requireRole } from "@/lib/auth";
 import ExamQuestion from "@/models/ExamQuestion";
+
+export const dynamic = "force-dynamic";
 
 // GET /api/exam/questions?type=write|listen - Шалгалтын 8 асуултыг random сонгож буцаана
 export async function GET(req) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return Response.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type");
   if (!["write", "listen"].includes(type)) {

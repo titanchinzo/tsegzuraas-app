@@ -23,6 +23,7 @@ function ExamLayout({ type, refreshKey, children }) {
 export default function ListenExamPage() {
   const [roundIndex, setRoundIndex] = useState(0);
   const [round, setRound] = useState(null);
+  const [settings, setSettings] = useState(null);
   const [attempts, setAttempts] = useState([]);
   const [lastResult, setLastResult] = useState(null);
   const [finalResult, setFinalResult] = useState(null);
@@ -41,6 +42,10 @@ export default function ListenExamPage() {
 
   useEffect(() => {
     loadRound();
+    fetch("/api/exam/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setSettings)
+      .catch(() => {});
   }, [loadRound]);
 
   async function handleComplete(result) {
@@ -122,12 +127,14 @@ export default function ListenExamPage() {
         </div>
       </div>
 
-      {round && !lastResult && (
+      {round && settings && !lastResult && (
         <ListenTrainer
           key={roundIndex}
           target={round.text}
           morse={round.morse}
           onComplete={handleComplete}
+          fixedWpm={settings.wpm}
+          fixedFrequency={settings.frequency}
         />
       )}
 

@@ -3,6 +3,8 @@ import { connectDB } from "@/lib/db";
 import { isAdminEmail } from "@/lib/auth";
 import User from "@/models/User";
 
+export const dynamic = "force-dynamic";
+
 // Clerk хэрэглэгчийн ХАМГИЙН ТОХИРОХ имэйлийг олно: эхлээд ADMIN_EMAILS-тэй
 // таарч буй аль ч имэйл байвал үүнийг сонгоно (тэргүүлэх/анхны имэйл гэдэг
 // нь ADMIN_EMAILS-ийн жагсаалтад байгаа эсэхийг үл харгалзана — зөвхөн

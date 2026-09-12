@@ -1,22 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Зөвхөн нэвтэрсэн хэрэглэгчид зориулсан route-уудыг тодорхойлно.
-// Дэлгэрэнгүй эрхийн шалгалтыг (role-based) тухайн route handler дотор
-// lib/auth.js -ийн requireRole() ашиглан хийнэ (spec §9 Security).
-const isProtectedRoute = createRouteMatcher([
-  "/admin(.*)",
-  "/api/lessons(.*)",
-  "/api/practice(.*)",
-  "/api/exam(.*)",
-  "/api/users/me",
-  "/api/users/role",
-  "/api/users/students(.*)",
-  "/api/users",
-  "/api/upload(.*)",
-]);
+// Зөвхөн /admin хуудсыг дундын middleware-ээр хамгаална (нэвтрээгүй бол
+// sign-in руу шилжинэ). API route-уудыг ЭНД оруулбал auth().protect() нь
+// fetch хүсэлтэд бэйр 404 буцааж, route handler доторх зохих 401/403 JSON
+// хариу (lib/auth.js-ийн requireRole/getCurrentUser) хэзээ ч ажиллахгүй
+// болдог тул тэдгээрийн эрхийн шалгалтыг зөвхөн route handler дотор хийнэ
+// (spec §9 Security).
+const isProtectedPage = createRouteMatcher(["/admin(.*)"]);
 
 export default clerkMiddleware((auth, req) => {
-  if (isProtectedRoute(req)) {
+  if (isProtectedPage(req)) {
     auth().protect();
   }
 });

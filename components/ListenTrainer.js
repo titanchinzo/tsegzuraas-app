@@ -11,9 +11,13 @@ import { buildAttemptResult } from "@/lib/scoring";
  *  - target: string        зорилтот текст
  *  - morse: string          тохирох морзын код (тэмдэгт хооронд зай, үг хооронд "/")
  *  - onComplete(result)
+ *  - fixedWpm, fixedFrequency: заавал биш. Өгвөл хурд/өнгийг эдгээрээр
+ *    түгжиж, slider-г нуана (жиш нь Шалгалтад Багшийн тохируулсан утга).
  */
-export default function ListenTrainer({ target, morse, onComplete }) {
-  const [wpm, setWpm] = useState(20);
+export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fixedFrequency }) {
+  const [wpm, setWpm] = useState(fixedWpm ?? 20);
+  const frequency = fixedFrequency ?? 600;
+  const locked = fixedWpm != null;
   const [typed, setTyped] = useState("");
   const [startedAt, setStartedAt] = useState(null);
   const [finished, setFinished] = useState(false);
@@ -38,7 +42,7 @@ export default function ListenTrainer({ target, morse, onComplete }) {
   );
 
   function handlePlay() {
-    playMorseSequence(morse, wpm);
+    playMorseSequence(morse, wpm, { frequency });
     setPlayCount((c) => c + 1);
     if (!startedAt) setStartedAt(Date.now());
   }
@@ -62,17 +66,24 @@ export default function ListenTrainer({ target, morse, onComplete }) {
           <p className="text-sm text-ink/50 mt-1">Тоглогдсон удаа: {playCount}</p>
         </div>
 
-        <label className="flex flex-col text-sm gap-1 text-ink/60">
-          Хурд (WPM): <span className="font-semibold text-brand-darker">{wpm}</span>
-          <input
-            type="range"
-            min="5"
-            max="40"
-            value={wpm}
-            onChange={(e) => setWpm(Number(e.target.value))}
-            className="w-40 accent-accent"
-          />
-        </label>
+        {locked ? (
+          <p className="text-sm text-ink/50">
+            Хурд: <span className="font-semibold text-brand-darker">{wpm} WPM</span>
+            <span className="text-ink/30"> · Багшийн тохиргоо</span>
+          </p>
+        ) : (
+          <label className="flex flex-col text-sm gap-1 text-ink/60">
+            Хурд (WPM): <span className="font-semibold text-brand-darker">{wpm}</span>
+            <input
+              type="range"
+              min="5"
+              max="40"
+              value={wpm}
+              onChange={(e) => setWpm(Number(e.target.value))}
+              className="w-40 accent-accent"
+            />
+          </label>
+        )}
       </div>
 
       <button onClick={handlePlay} className="btn-primary" disabled={finished}>

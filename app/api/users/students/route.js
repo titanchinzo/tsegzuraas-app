@@ -2,6 +2,8 @@ import { connectDB } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import Student from "@/models/Student";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/users/students - Багшийн сурагчдын жагсаалт
 export async function GET() {
   let user;

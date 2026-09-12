@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { randomChars, CATEGORIES } from "@/lib/morse";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/practice/write - Random 5 тэмдэгт буцаах (Дадлага, эрх: Admin/Teacher/Student)
 export async function GET() {
   const { userId } = auth();

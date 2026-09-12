@@ -2,6 +2,8 @@ import { connectDB } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import User from "@/models/User";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/users - Admin бүх хэрэглэгчийг, Teacher зөвхөн сурагчдын
 // жагсаалтыг (сурагч нэмэх сонголтод зориулан) харна.
 export async function GET() {

@@ -13,6 +13,7 @@ export default function TeacherDashboardPage() {
       <h1 className="page-title">🧑‍🏫 Багшийн самбар</h1>
       <LessonManagement />
       <ExamQuestionForm />
+      <ListenExamSettingsForm />
       <StudentManagement />
     </div>
   );
@@ -173,6 +174,77 @@ function ExamQuestionForm() {
         className="input"
       />
       <button className="btn-primary">Нэмэх</button>
+    </form>
+  );
+}
+
+function ListenExamSettingsForm() {
+  const [wpm, setWpm] = useState(20);
+  const [frequency, setFrequency] = useState(600);
+  const [status, setStatus] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/exam/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        setWpm(data.wpm);
+        setFrequency(data.frequency);
+      });
+  }, []);
+
+  async function save(e) {
+    e.preventDefault();
+    setSaving(true);
+    const res = await fetch("/api/exam/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wpm, frequency }),
+    });
+    setStatus(res.ok ? { ok: true, text: "Хадгалагдлаа." } : { ok: false, text: "Алдаа гарлаа." });
+    setSaving(false);
+  }
+
+  return (
+    <form onSubmit={save} className="card p-6 space-y-4">
+      <div>
+        <h2 className="font-bold text-brand-darker">Listen шалгалтын дуу</h2>
+        <p className="text-sm text-ink/50 mt-1">
+          Шалгалт өгөх үед сурагч энэ хурд, өнгөөр л сонсоно (өөрөө өөрчлөх боломжгүй).
+          Тэмдэгтийг радио дуудлагын хэвшлээр 5-аар нь бүлэглэж тоглуулна.
+        </p>
+      </div>
+      <StatusMessage status={status} />
+
+      <label className="flex flex-col gap-1.5 text-sm text-ink/70">
+        Хурд (WPM): <span className="font-semibold text-brand-darker">{wpm}</span>
+        <input
+          type="range"
+          min="5"
+          max="40"
+          value={wpm}
+          onChange={(e) => setWpm(Number(e.target.value))}
+          className="accent-accent"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1.5 text-sm text-ink/70">
+        Өнгө (Hz): <span className="font-semibold text-brand-darker">{frequency} Hz</span>
+        <input
+          type="range"
+          min="300"
+          max="1000"
+          step="10"
+          value={frequency}
+          onChange={(e) => setFrequency(Number(e.target.value))}
+          className="accent-accent"
+        />
+      </label>
+
+      <button className="btn-primary" disabled={saving}>
+        {saving ? "Хадгалж байна..." : "Хадгалах"}
+      </button>
     </form>
   );
 }
