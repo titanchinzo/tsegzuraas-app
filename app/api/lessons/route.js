@@ -1,8 +1,12 @@
 import { connectDB } from "@/lib/db";
 import { requireRole, getCurrentUser } from "@/lib/auth";
 import Lesson from "@/models/Lesson";
+import Student from "@/models/Student";
 
-// GET /api/lessons - Бүх хичээл авах (Teacher, Student, Admin эрхтэй үзнэ)
+export const dynamic = "force-dynamic";
+
+// GET /api/lessons - Хичээл авах: Admin бүгдийг, Teacher зөвхөн өөрийнхийг,
+// Student зөвхөн өөрийг сурагчаараа нэмсэн багш нарынхыг үзнэ.
 export async function GET() {
   const user = await getCurrentUser();
   if (!user || !["teacher", "student", "admin"].includes(user.role)) {
@@ -10,7 +14,16 @@ export async function GET() {
   }
 
   await connectDB();
-  const lessons = await Lesson.find().sort({ createdAt: -1 }).populate(
+
+  let filter = {};
+  if (user.role === "teacher") {
+    filter = { teacherId: user._id };
+  } else if (user.role === "student") {
+    const links = await Student.find({ studentId: user._id }, "teacherId");
+    filter = { teacherId: { $in: links.map((l) => l.teacherId) } };
+  }
+
+  const lessons = await Lesson.find(filter).sort({ createdAt: -1 }).populate(
     "teacherId",
     "nickname"
   );
