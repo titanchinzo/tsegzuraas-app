@@ -12,7 +12,7 @@ export default function TeacherDashboardPage() {
     <div className="space-y-10 max-w-2xl mx-auto animate-fade-in">
       <h1 className="page-title">🧑‍🏫 Багшийн самбар</h1>
       <LessonManagement />
-      <ExamQuestionForm />
+      <ExamQuestionManagement />
       <ListenExamSettingsForm />
       <StudentManagement />
     </div>
@@ -140,9 +140,22 @@ function LessonManagement() {
   );
 }
 
-function ExamQuestionForm() {
+function ExamQuestionManagement() {
+  const [questions, setQuestions] = useState([]);
   const [form, setForm] = useState({ type: "write", text: "" });
   const [status, setStatus] = useState(null);
+
+  async function loadQuestions() {
+    const res = await fetch("/api/exam/questions");
+    if (res.ok) {
+      const data = await res.json();
+      setQuestions(data.questions || []);
+    }
+  }
+
+  useEffect(() => {
+    loadQuestions();
+  }, []);
 
   async function submit(e) {
     e.preventDefault();
@@ -151,30 +164,71 @@ function ExamQuestionForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
-    setStatus(res.ok ? { ok: true, text: "Асуулт нэмэгдлээ." } : { ok: false, text: "Алдаа гарлаа." });
-    if (res.ok) setForm({ type: "write", text: "" });
+    setStatus(res.ok ? { ok: true, text: "Нэмэгдлээ." } : { ok: false, text: "Алдаа гарлаа." });
+    if (res.ok) {
+      setForm({ type: form.type, text: "" });
+      loadQuestions();
+    }
+  }
+
+  async function deleteQuestion(id) {
+    if (!confirm("Энэ агуулгыг устгах уу?")) return;
+    await fetch(`/api/exam/questions/${id}`, { method: "DELETE" });
+    loadQuestions();
   }
 
   return (
-    <form onSubmit={submit} className="card p-6 space-y-3">
-      <h2 className="font-bold text-brand-darker">Шалгалтын асуулт оруулах</h2>
-      <StatusMessage status={status} />
-      <select
-        value={form.type}
-        onChange={(e) => setForm({ ...form, type: e.target.value })}
-        className="input"
-      >
-        <option value="write">Write</option>
-        <option value="listen">Listen</option>
-      </select>
-      <input
-        placeholder="Текст"
-        value={form.text}
-        onChange={(e) => setForm({ ...form, text: e.target.value })}
-        className="input"
-      />
-      <button className="btn-primary">Нэмэх</button>
-    </form>
+    <section className="space-y-4">
+      <div>
+        <h2 className="font-bold text-brand-darker">Шалгалтын агуулга</h2>
+        <p className="text-sm text-ink/50 mt-1">
+          Write/Listen шалгалт өгөхөд энд оруулсан текстээс санамсаргүй сонгож
+          өгнө (5-аар бүлэглэгдэнэ). Зөвхөн таны сурагчид (Миний сурагчид
+          хэсэгт нэмсэн) энэ агуулгаар шалгалт өгнө.
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="card p-6 space-y-3">
+        <StatusMessage status={status} />
+        <select
+          value={form.type}
+          onChange={(e) => setForm({ ...form, type: e.target.value })}
+          className="input"
+        >
+          <option value="write">Write</option>
+          <option value="listen">Listen</option>
+        </select>
+        <input
+          placeholder="Тэмдэгт эсвэл үг (жиш: K3XQP)"
+          value={form.text}
+          onChange={(e) => setForm({ ...form, text: e.target.value })}
+          className="input"
+        />
+        <button className="btn-primary">Нэмэх</button>
+      </form>
+
+      <div className="space-y-2">
+        {questions.map((q) => (
+          <div key={q._id} className="card p-4 flex items-center justify-between gap-4">
+            <div className="min-w-0 flex items-center gap-3">
+              <span className="badge-brand shrink-0">{q.type}</span>
+              <span className="font-mono text-ink/90 truncate">{q.text}</span>
+            </div>
+            <button
+              onClick={() => deleteQuestion(q._id)}
+              className="shrink-0 text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
+            >
+              Устгах
+            </button>
+          </div>
+        ))}
+        {questions.length === 0 && (
+          <div className="card p-10 text-center text-ink/50 text-sm">
+            Одоогоор шалгалтын агуулга алга байна.
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

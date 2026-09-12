@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { randomChars, REVERSE_MORSE_MAP } from "@/lib/morse";
+import { REVERSE_MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
 import { Circle, Minus, Check, X } from "lucide-react";
 import ResultPanel from "@/components/ResultPanel";
@@ -21,7 +21,6 @@ function ExamLayout({ type, refreshKey, children }) {
 }
 
 const TOTAL_ROUNDS = 5; // Макро-үений тоо
-const CHARS_PER_ROUND = 5; // Үе тус бүрийн тэмдэгтийн тоо (5x5 формат)
 const GAP_MS = 1500;
 
 export default function WriteExamPage() {
@@ -41,15 +40,16 @@ export default function WriteExamPage() {
   const loadRound = useCallback(async () => {
     setLastResult(null);
     const res = await fetch("/api/exam/round?type=write");
+    const data = await res.json().catch(() => ({}));
     if (res.status === 401) {
       setError("Шалгалт өгөхийн тулд эхлээд нэвтэрнэ үү.");
       return;
     }
     if (!res.ok) {
-      setError("Шалгалт ачаалахад алдаа гарлаа. Дахин оролдоно уу.");
+      setError(data.error || "Шалгалт ачаалахад алдаа гарлаа. Дахин оролдоно уу.");
       return;
     }
-    setChars(randomChars(CHARS_PER_ROUND).split(""));
+    setChars(data.text.split(""));
     setCurrentCharIndex(0);
     morseInputRef.current = "";
     setMorseInput("");
@@ -202,8 +202,8 @@ export default function WriteExamPage() {
       </div>
 
       <div className="card p-6">
-        {/* Тухайн үений 5 тэмдэгтийн явц */}
-        <div className="mb-6 flex items-center justify-center gap-3">
+        {/* Тухайн үений тэмдэгтийн явц — радио дуудлагын хэвшлээр 5-аар бүлэглэнэ */}
+        <div className="mb-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-3">
           {chars.map((c, i) => {
             let cls = "border-surface bg-surface-light text-ink/30";
             if (i === currentCharIndex && !lastResult) {
@@ -216,7 +216,9 @@ export default function WriteExamPage() {
             return (
               <div
                 key={i}
-                className={`relative flex h-14 w-14 items-center justify-center rounded-lg border-2 text-xl font-bold transition-all ${cls}`}
+                className={`relative flex h-14 w-14 items-center justify-center rounded-lg border-2 text-xl font-bold transition-all ${
+                  i > 0 && i % 5 === 0 ? "ml-4" : ""
+                } ${cls}`}
               >
                 {charResults[i] ? (
                   <>

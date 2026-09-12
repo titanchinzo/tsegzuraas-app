@@ -32,11 +32,15 @@ export default function ListenExamPage() {
   const loadRound = useCallback(async () => {
     setLastResult(null);
     const res = await fetch("/api/exam/round?type=listen");
+    const data = await res.json().catch(() => ({}));
     if (res.status === 401) {
       setError("Шалгалт өгөхийн тулд эхлээд нэвтэрнэ үү.");
       return;
     }
-    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error || "Шалгалт ачаалахад алдаа гарлаа. Дахин оролдоно уу.");
+      return;
+    }
     setRound(data);
   }, []);
 

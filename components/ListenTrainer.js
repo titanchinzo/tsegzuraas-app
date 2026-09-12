@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { playMorseSequence } from "@/lib/audio";
 import { buildAttemptResult } from "@/lib/scoring";
 
@@ -22,12 +22,14 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
   const [startedAt, setStartedAt] = useState(null);
   const [finished, setFinished] = useState(false);
   const [playCount, setPlayCount] = useState(0);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     setTyped("");
     setStartedAt(null);
     setFinished(false);
     setPlayCount(0);
+    inputRef.current?.focus();
   }, [target]);
 
   const finish = useCallback(
@@ -41,11 +43,23 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
     [finished, startedAt, target, onComplete]
   );
 
-  function handlePlay() {
+  const handlePlay = useCallback(() => {
     playMorseSequence(morse, wpm, { frequency });
     setPlayCount((c) => c + 1);
-    if (!startedAt) setStartedAt(Date.now());
-  }
+    setStartedAt((prev) => prev ?? Date.now());
+  }, [morse, wpm, frequency]);
+
+  // Enter дарахад mouse-гүйгээр сонсоод, тэр даруй бичих талбар руу шилжинэ.
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key !== "Enter" || finished) return;
+      e.preventDefault();
+      handlePlay();
+      inputRef.current?.focus();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [finished, handlePlay]);
 
   function handleChange(e) {
     const val = e.target.value.toUpperCase();
@@ -91,11 +105,13 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
       </button>
 
       <input
+        ref={inputRef}
         value={typed}
         onChange={handleChange}
         disabled={finished}
+        autoFocus
         className="input font-mono text-xl tracking-widest"
-        placeholder="Сонссон тэмдэгтээ бичнэ үү..."
+        placeholder="Сонссон тэмдэгтээ бичнэ үү... (Enter = сонсох)"
       />
 
       {!finished && typed.length > 0 && (
@@ -104,17 +120,21 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
         </button>
       )}
 
-      {finished && (
-        <div className="space-y-2">
-          <p className="text-accent-dark font-medium flex items-center gap-1.5">
-            ✓ Дууслаа. Үр дүнг доор харна уу.
-          </p>
-          <div className="bg-surface-light border border-surface rounded-lg p-3.5">
-            <p className="label">Зөв хариулт байсан</p>
-            <p className="font-mono text-xl tracking-widest text-brand-darker mt-1">{target}</p>
+      {/* Дуусахаас өмнө ч энэ хэсгийн зайг тогтмол хадгалж, үр дүн гарч ирэхэд
+          доорх товч огцом шидэгдэхгүй байхаар (monkeytype-ийн байдлаар). */}
+      <div className="min-h-[112px]">
+        {finished && (
+          <div className="space-y-2 animate-fade-in">
+            <p className="text-accent-dark font-medium flex items-center gap-1.5">
+              ✓ Дууслаа. Үр дүнг доор харна уу.
+            </p>
+            <div className="bg-surface-light border border-surface rounded-lg p-3.5">
+              <p className="label">Зөв хариулт байсан</p>
+              <p className="font-mono text-xl tracking-widest text-brand-darker mt-1">{target}</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
