@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Minus, Delete, Eye, EyeOff } from "lucide-react";
 import { MORSE_MAP } from "@/lib/morse";
+import { playMorseSequence } from "@/lib/audio";
 
 // Автоматаар илгээх завсар. Морзын стандарт тэмдэгт хоорондын завсар нь
 // 3 нэгж боловч товч дарж кодлоход тэр нь хэт богино тул 12 нэгж авав.
@@ -99,13 +100,14 @@ export default function MorseEncodeTrainer({
       if (indexRef.current >= letters.length) return;
       if (!startedAt) setStartedAt(Date.now());
 
+      playMorseSequence(symbol, wpm);
       inputRef.current += symbol;
       setInput(inputRef.current);
 
       clearTimeout(timerRef.current);
       timerRef.current = setTimeout(commit, gap);
     },
-    [letters.length, commit, startedAt, gap]
+    [letters.length, commit, startedAt, gap, wpm]
   );
 
   const clearInput = useCallback(() => {

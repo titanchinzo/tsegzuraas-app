@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { REVERSE_MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
+import { playMorseSequence } from "@/lib/audio";
 import { Circle, Minus, Check, X } from "lucide-react";
 import ListenTrainer from "@/components/ListenTrainer";
 import ResultPanel from "@/components/ResultPanel";
@@ -10,6 +11,7 @@ import ExamLeaderboard from "@/components/ExamLeaderboard";
 
 const TOTAL_ROUNDS = 5;
 const GAP_MS = 1500;
+const KEY_WPM = 20; // Товшсон цэг/зураасны дууны хурд (Write Score-д тохируулах slider алга)
 
 // Шалгалтын агуулга (зүүн) + дүнгийн самбар (баруун булан). lg-ээс доош
 // самбар нь агуулгын доор давхарлана.
@@ -99,6 +101,7 @@ function WriteExamPanel() {
   const addSymbol = useCallback(
     (symbol) => {
       if (lastResult || currentCharIndex >= chars.length) return;
+      playMorseSequence(symbol, KEY_WPM);
       const next = morseInputRef.current + symbol;
       morseInputRef.current = next;
       setMorseInput(next);
