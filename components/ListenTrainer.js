@@ -18,6 +18,11 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
   const [wpm, setWpm] = useState(fixedWpm ?? 20);
   const frequency = fixedFrequency ?? 600;
   const locked = fixedWpm != null;
+  // target нь 5-аар бүлэглэхийн тулд зай агуулж болно (жиш: "ABCDE FGHIJ").
+  // Зайг бичих шаардлагагүй, зөвхөн жинхэнэ тэмдэгтээр урт/оноо тооцно —
+  // эс бөгөөс зай алгасвал дараагийн бүх тэмдэгт нэг байрлал шилжиж буруу
+  // тооцогддог байсан.
+  const cleanTarget = target.replace(/\s+/g, "");
   const [typed, setTyped] = useState("");
   const [startedAt, setStartedAt] = useState(null);
   const [finished, setFinished] = useState(false);
@@ -37,10 +42,14 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
       if (finished) return;
       setFinished(true);
       const durationSeconds = startedAt ? (Date.now() - startedAt) / 1000 : 0;
-      const result = buildAttemptResult({ target, input: finalTyped, durationSeconds });
+      const result = buildAttemptResult({
+        target: cleanTarget,
+        input: finalTyped.replace(/\s+/g, ""),
+        durationSeconds,
+      });
       onComplete?.(result);
     },
-    [finished, startedAt, target, onComplete]
+    [finished, startedAt, cleanTarget, onComplete]
   );
 
   const handlePlay = useCallback(() => {
@@ -65,7 +74,7 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
     const val = e.target.value.toUpperCase();
     if (!startedAt) setStartedAt(Date.now());
     setTyped(val);
-    if (val.length >= target.length) finish(val);
+    if (val.replace(/\s+/g, "").length >= cleanTarget.length) finish(val);
   }
 
   function handleSubmit() {
@@ -76,7 +85,7 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
     <div className="card p-6 space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <span className="label">Сонсоод бичнэ үү ({target.length} тэмдэгт)</span>
+          <span className="label">Сонсоод бичнэ үү ({cleanTarget.length} тэмдэгт)</span>
           <p className="text-sm text-ink/50 mt-1">Тоглогдсон удаа: {playCount}</p>
         </div>
 

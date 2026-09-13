@@ -14,7 +14,18 @@ export default function TeacherDashboardPage() {
       <h1 className="page-title">🧑‍🏫 Багшийн самбар</h1>
       <LessonManagement />
       <ExamQuestionManagement />
-      <ListenExamSettingsForm />
+      <ListenSettingsForm
+        scope="score"
+        title="Score хуудасны Listen дуу"
+        description="Score хуудасны Write/Listen Exam (random, rank-той) дээр ашиглагдана. Teacher Listen-ээс бүрэн тусдаа. Тэмдэгтийг радио дуудлагын хэвшлээр 5-аар нь бүлэглэж тоглуулна."
+        showSecondsPerGroup={false}
+      />
+      <ListenSettingsForm
+        scope="teacher"
+        title="Teacher Listen дуу"
+        description="Lessons дотрох Teacher Listen шалгалт дээр ашиглагдана. Score/Listen-ээс бүрэн тусдаа. Бүлэг тус бүрийг автоматаар тоглуулж, доорх хугацаанд бичүүлнэ."
+        showSecondsPerGroup
+      />
       <StudentManagement />
     </div>
   );
@@ -235,7 +246,9 @@ function ExamQuestionManagement() {
   );
 }
 
-function ListenExamSettingsForm() {
+// scope="score" -> Score хуудасны random Listen; scope="teacher" -> Teacher
+// Listen. Хоёр нь бүрэн тусдаа тохиргоотой (нэгийг өөрчлөхөд нөгөө хөндөгдөхгүй).
+function ListenSettingsForm({ scope, title, description, showSecondsPerGroup }) {
   const [wpm, setWpm] = useState(20);
   const [frequency, setFrequency] = useState(600);
   const [secondsPerGroup, setSecondsPerGroup] = useState(6);
@@ -243,7 +256,7 @@ function ListenExamSettingsForm() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/exam/settings")
+    fetch(`/api/exam/settings?scope=${scope}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) return;
@@ -251,12 +264,12 @@ function ListenExamSettingsForm() {
         setFrequency(data.frequency);
         setSecondsPerGroup(data.secondsPerGroup);
       });
-  }, []);
+  }, [scope]);
 
   async function save(e) {
     e.preventDefault();
     setSaving(true);
-    const res = await fetch("/api/exam/settings", {
+    const res = await fetch(`/api/exam/settings?scope=${scope}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ wpm, frequency, secondsPerGroup }),
@@ -268,12 +281,8 @@ function ListenExamSettingsForm() {
   return (
     <form onSubmit={save} className="card p-6 space-y-4">
       <div>
-        <h2 className="font-bold text-brand-darker">Listen шалгалтын дуу</h2>
-        <p className="text-sm text-ink/50 mt-1">
-          Write/Listen Exam болон Teacher Write/Listen хоёуланд ашиглагдана.
-          Сурагч энэ хурд, өнгөөр л сонсоно (өөрөө өөрчлөх боломжгүй).
-          Тэмдэгтийг радио дуудлагын хэвшлээр 5-аар нь бүлэглэж тоглуулна.
-        </p>
+        <h2 className="font-bold text-brand-darker">{title}</h2>
+        <p className="text-sm text-ink/50 mt-1">{description}</p>
       </div>
       <StatusMessage status={status} />
 
@@ -302,18 +311,20 @@ function ListenExamSettingsForm() {
         />
       </label>
 
-      <label className="flex flex-col gap-1.5 text-sm text-ink/70">
-        Teacher Listen — бүлэг тус бүрд өгөх хугацаа:{" "}
-        <span className="font-semibold text-brand-darker">{secondsPerGroup}с</span>
-        <input
-          type="range"
-          min="2"
-          max="30"
-          value={secondsPerGroup}
-          onChange={(e) => setSecondsPerGroup(Number(e.target.value))}
-          className="accent-accent"
-        />
-      </label>
+      {showSecondsPerGroup && (
+        <label className="flex flex-col gap-1.5 text-sm text-ink/70">
+          Бүлэг тус бүрд өгөх хугацаа:{" "}
+          <span className="font-semibold text-brand-darker">{secondsPerGroup}с</span>
+          <input
+            type="range"
+            min="2"
+            max="30"
+            value={secondsPerGroup}
+            onChange={(e) => setSecondsPerGroup(Number(e.target.value))}
+            className="accent-accent"
+          />
+        </label>
+      )}
 
       <button className="btn-primary" disabled={saving}>
         {saving ? "Хадгалж байна..." : "Хадгалах"}

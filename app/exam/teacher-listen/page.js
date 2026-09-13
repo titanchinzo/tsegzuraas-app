@@ -29,11 +29,20 @@ export default function TeacherListenExamPage() {
       setGroups(groupChars(data.text, 5));
     });
 
-    fetch("/api/exam/settings")
+    fetch("/api/exam/settings?scope=teacher")
       .then((r) => (r.ok ? r.json() : null))
       .then(setSettings)
       .catch(() => {});
   }, []);
+
+  function handleComplete(result) {
+    setFinalResult(result);
+    fetch("/api/exam/teacher-submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "listen", accuracy: result.accuracy, wpm: result.wpm }),
+    });
+  }
 
   if (error) {
     return (
@@ -66,7 +75,7 @@ export default function TeacherListenExamPage() {
         wpm={settings.wpm}
         frequency={settings.frequency}
         secondsPerGroup={settings.secondsPerGroup}
-        onComplete={setFinalResult}
+        onComplete={handleComplete}
       />
     </div>
   );

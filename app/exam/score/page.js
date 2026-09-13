@@ -353,7 +353,7 @@ function ListenExamPanel() {
 
   useEffect(() => {
     loadRound();
-    fetch("/api/exam/settings")
+    fetch("/api/exam/settings?scope=score")
       .then((r) => (r.ok ? r.json() : null))
       .then(setSettings)
       .catch(() => {});

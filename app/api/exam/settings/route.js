@@ -6,16 +6,26 @@ const DEFAULTS = { wpm: 20, frequency: 600, secondsPerGroup: 6 };
 
 export const dynamic = "force-dynamic";
 
-// GET /api/exam/settings - Listen шалгалтын тоглуулах хурд/Hz, Багшийн
-// шалгалтын бүлэг тус бүрийн хугацааг авах. Нэвтэрсэн хэн ч уншиж болно.
-export async function GET() {
+// scope=score -> Score хуудасны Listen (random, rank-той) шалгалтад.
+// scope=teacher -> Lessons дотрох Teacher Listen шалгалтад.
+// Хоёр нь ЯГ тусдаа баримт тул нэгийг өөрчлөхөд нөгөө хөндөгдөхгүй.
+function keyFor(scope) {
+  return scope === "teacher" ? "teacher-listen" : "score-listen";
+}
+
+// GET /api/exam/settings?scope=score|teacher - тухайн Listen-ийн тоглуулах
+// хурд/Hz (Teacher-ийн хувьд бүлгийн хугацаа) авах. Нэвтэрсэн хэн ч уншина.
+export async function GET(req) {
   const user = await getCurrentUser();
   if (!user) {
     return Response.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(req.url);
+  const key = keyFor(searchParams.get("scope"));
+
   await connectDB();
-  const settings = await ExamSettings.findOne({ key: "listen" });
+  const settings = await ExamSettings.findOne({ key });
 
   return Response.json({
     wpm: settings?.wpm ?? DEFAULTS.wpm,
@@ -24,13 +34,16 @@ export async function GET() {
   });
 }
 
-// PUT /api/exam/settings - Багш/Admin хурд, Hz, бүлгийн хугацааг тохируулна.
+// PUT /api/exam/settings?scope=score|teacher - Багш/Admin тохируулна.
 export async function PUT(req) {
   try {
     await requireRole(["teacher", "admin"]);
   } catch (err) {
     return Response.json({ error: err.message }, { status: err.status || 500 });
   }
+
+  const { searchParams } = new URL(req.url);
+  const key = keyFor(searchParams.get("scope"));
 
   const { wpm, frequency, secondsPerGroup } = await req.json();
   const cleanWpm = Math.min(40, Math.max(5, Number(wpm) || DEFAULTS.wpm));
@@ -39,7 +52,7 @@ export async function PUT(req) {
 
   await connectDB();
   const settings = await ExamSettings.findOneAndUpdate(
-    { key: "listen" },
+    { key },
     { wpm: cleanWpm, frequency: cleanFrequency, secondsPerGroup: cleanSeconds },
     { upsert: true, new: true }
   );

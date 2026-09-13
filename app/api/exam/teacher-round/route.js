@@ -2,6 +2,8 @@ import { connectDB } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import ExamQuestion from "@/models/ExamQuestion";
 import Student from "@/models/Student";
+import TeacherAttempt from "@/models/TeacherAttempt";
+import { TEACHER_EXAM_MAX_ATTEMPTS } from "@/lib/examConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +27,16 @@ export async function GET(req) {
   }
 
   await connectDB();
+
+  if (user.role === "student") {
+    const used = await TeacherAttempt.countDocuments({ studentId: user._id, type });
+    if (used >= TEACHER_EXAM_MAX_ATTEMPTS) {
+      return Response.json(
+        { error: `Та энэ шалгалтыг аль хэдийн ${TEACHER_EXAM_MAX_ATTEMPTS} удаа өгсөн байна.` },
+        { status: 403 }
+      );
+    }
+  }
 
   const match = { type };
   if (user.role === "student") {

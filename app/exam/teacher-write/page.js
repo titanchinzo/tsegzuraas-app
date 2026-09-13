@@ -41,7 +41,7 @@ export default function TeacherWriteExamPage() {
       setStartedAt(Date.now());
     });
 
-    fetch("/api/exam/settings")
+    fetch("/api/exam/settings?scope=teacher")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => data && setSettings(data))
       .catch(() => {});
@@ -75,13 +75,19 @@ export default function TeacherWriteExamPage() {
           if (nextResults.length >= chars.length) {
             const correctCount = nextResults.filter((x) => x.correct).length;
             const durationSeconds = (Date.now() - startedAt) / 1000;
-            setFinalResult({
+            const result = {
               correct: correctCount,
               errors: nextResults.length - correctCount,
               total: nextResults.length,
               accuracy: Math.round((correctCount / nextResults.length) * 100),
               wpm: calcWPM(nextResults.length, durationSeconds),
               durationSeconds,
+            };
+            setFinalResult(result);
+            fetch("/api/exam/teacher-submit", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "write", accuracy: result.accuracy, wpm: result.wpm }),
             });
           }
 
