@@ -1,5 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { Inter, JetBrains_Mono, Exo_2 } from "next/font/google";
+import { Inter, JetBrains_Mono, Unbounded } from "next/font/google";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,10 +8,10 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-sans" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
-// Гарчигт зориулсан техник/сансрын мэдрэмжтэй фонт — кирилл дэмждэг тул
-// монгол гарчгууд дээр ч харагдана (Space Grotesk кирилл дэмждэггүй тул
-// тохирохгүй).
-const exo2 = Exo_2({
+// Гарчигт зориулсан цэвэрхэн, зузаан геометрик фонт (SpaceX-ийн маягийн —
+// Exo 2-ийн "тоглоомын" мэдрэмжтэй хурц булантай үсгээс илүү цэвэр) —
+// кирилл дэмждэг тул монгол гарчгууд дээр ч харагдана.
+const unbounded = Unbounded({
   subsets: ["latin", "cyrillic"],
   variable: "--font-display",
   weight: ["600", "700", "800"],
@@ -28,7 +28,7 @@ export const viewport = {
   initialScale: 1,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f3f6fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c1420" },
+    { media: "(prefers-color-scheme: dark)", color: "#070a0e" },
   ],
 };
 
@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <html
         lang="mn"
-        className={`${inter.variable} ${jetbrainsMono.variable} ${exo2.variable}`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${unbounded.variable}`}
         suppressHydrationWarning
       >
         <body className="min-h-screen grid grid-rows-layout font-sans antialiased">
