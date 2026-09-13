@@ -137,9 +137,53 @@ function OrderManagement() {
     loadOrders();
   }
 
+  function downloadCsv() {
+    const headers = [
+      "Огноо",
+      "Бүтээгдэхүүн",
+      "Захиалагч",
+      "Утас",
+      "Тоо",
+      "Нэгжийн үнэ",
+      "Нийт дүн",
+      "Тэмдэглэл",
+      "Төлөв",
+    ];
+    const escape = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const rows = orders.map((o) =>
+      [
+        new Date(o.createdAt).toLocaleString("mn-MN"),
+        o.productName,
+        o.customerName,
+        o.customerPhone,
+        o.quantity,
+        o.price,
+        o.price * o.quantity,
+        o.note,
+        o.status,
+      ]
+        .map(escape)
+        .join(",")
+    );
+    // \uFEFF (BOM) - Excel кирилл текстийг зөв (UTF-8) уншихад шаардлагатай.
+    const csv = "\uFEFF" + [headers.map(escape).join(","), ...rows].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `zahialga-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-bold text-brand-darker">Захиалгууд</h2>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-lg font-bold text-brand-darker">Захиалгууд</h2>
+        <button onClick={downloadCsv} disabled={orders.length === 0} className="btn-secondary !px-4 !py-1.5 text-sm disabled:opacity-40">
+          ⬇ Excel татах
+        </button>
+      </div>
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
