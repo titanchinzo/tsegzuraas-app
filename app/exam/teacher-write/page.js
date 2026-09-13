@@ -1,13 +1,26 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { REVERSE_MORSE_MAP } from "@/lib/morse";
+import { REVERSE_MORSE_MAP, MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
 import { playMorseSequence } from "@/lib/audio";
 import { Circle, Minus } from "lucide-react";
 import ResultPanel from "@/components/ResultPanel";
 
 const GAP_MS = 1500;
+
+// Багшийн бичсэн текстэд зай, эсвэл дэмжигддэггүй цэг таслал (жиш: ";", "'")
+// орж болно — эдгээрт морзын код байхгүй тул кодлуулахгүй, зөвхөн үзэмжийн
+// зорилгоор (үг завсарлахад) харуулаад автоматаар алгасна.
+function isEncodable(ch) {
+  return Boolean(MORSE_MAP[ch.toUpperCase()]);
+}
+
+function nextEncodableIndex(chars, from) {
+  let i = from;
+  while (i < chars.length && !isEncodable(chars[i])) i++;
+  return i;
+}
 
 // Багшийн Write шалгалт: Random Write Exam-тай (Score хуудсанд, rank-тай) ЯГ
 // ХОЛБООГҮЙ тусдаа систем. Тухайн сурагчийн багшийн ExamQuestion сангаас
@@ -37,7 +50,9 @@ export default function TeacherWriteExamPage() {
         setError(data.error || "Шалгалт ачаалахад алдаа гарлаа. Дахин оролдоно уу.");
         return;
       }
-      setChars(data.text.split(""));
+      const nextChars = data.text.split("");
+      setChars(nextChars);
+      setCurrentCharIndex(nextEncodableIndex(nextChars, 0));
       setStartedAt(Date.now());
     });
 
@@ -47,9 +62,14 @@ export default function TeacherWriteExamPage() {
       .catch(() => {});
   }, []);
 
+  const encodableCount = chars ? chars.filter(isEncodable).length : 0;
+
   // Санамж: setState updater дотор өөр setState дуудахаас зайлсхийж, ref-ээр
   // утгыг тогтвортой уншина (React 18 dev Strict Mode-той холбоотой алгасах
   // алдаанаас сэргийлнэ — exam/write/page.js-тэй ижил загвар).
+  // charResults-ийг chars[]-ийн индекстэй ЯГ ижил (sparse) индекслэнэ, учир
+  // нь алгассан (кодлогдохгүй) тэмдэгт байх тул дэс дараалсан push хийвэл
+  // харуулах өнгө буруу индекс рүү шилждэг байв.
   const addSymbol = useCallback(
     (symbol) => {
       if (!chars || finalResult || currentCharIndex >= chars.length) return;
@@ -68,19 +88,22 @@ export default function TeacherWriteExamPage() {
         const decoded = REVERSE_MORSE_MAP[finalInput] || "?";
         const expected = chars[currentCharIndex];
         const correct = decoded === expected;
+        const committedIndex = currentCharIndex;
 
         setCharResults((r) => {
-          const nextResults = [...r, { char: expected, input: finalInput, decoded, correct }];
+          const nextResults = [...r];
+          nextResults[committedIndex] = { char: expected, input: finalInput, decoded, correct };
 
-          if (nextResults.length >= chars.length) {
-            const correctCount = nextResults.filter((x) => x.correct).length;
+          const doneCount = nextResults.filter(Boolean).length;
+          if (doneCount >= encodableCount) {
+            const correctCount = nextResults.filter((x) => x?.correct).length;
             const durationSeconds = (Date.now() - startedAt) / 1000;
             const result = {
               correct: correctCount,
-              errors: nextResults.length - correctCount,
-              total: nextResults.length,
-              accuracy: Math.round((correctCount / nextResults.length) * 100),
-              wpm: calcWPM(nextResults.length, durationSeconds),
+              errors: doneCount - correctCount,
+              total: doneCount,
+              accuracy: Math.round((correctCount / doneCount) * 100),
+              wpm: calcWPM(doneCount, durationSeconds),
               durationSeconds,
             };
             setFinalResult(result);
@@ -94,12 +117,12 @@ export default function TeacherWriteExamPage() {
           return nextResults;
         });
 
-        setCurrentCharIndex((i) => i + 1);
+        setCurrentCharIndex(nextEncodableIndex(chars, committedIndex + 1));
         morseInputRef.current = "";
         setMorseInput("");
       }, GAP_MS);
     },
-    [chars, currentCharIndex, finalResult, startedAt, settings]
+    [chars, currentCharIndex, finalResult, startedAt, settings, encodableCount]
   );
 
   useEffect(() => {
@@ -142,6 +165,8 @@ export default function TeacherWriteExamPage() {
     return <p className="text-ink/50 text-center">Ачааллаж байна...</p>;
   }
 
+  const doneCount = charResults.filter(Boolean).length;
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
       <div>
@@ -150,24 +175,28 @@ export default function TeacherWriteExamPage() {
           <div className="h-2 flex-1 rounded-full bg-surface overflow-hidden">
             <div
               className="h-full bg-accent rounded-full transition-all duration-300"
-              style={{ width: `${(currentCharIndex / chars.length) * 100}%` }}
+              style={{ width: `${(doneCount / encodableCount) * 100}%` }}
             />
           </div>
           <span className="text-sm text-ink/50 font-medium whitespace-nowrap">
-            {currentCharIndex} / {chars.length}
+            {doneCount} / {encodableCount}
           </span>
         </div>
       </div>
 
       <div className="card p-6">
         {/* monkeytype.com маягийн урсгал текст: ирээдүй тэмдэгт сааралтсан,
-            одоогийнх тодруулагдсан, бичсэн тэмдэгт зөв/буруугаараа өнгөлөгдөнэ. */}
+            одоогийнх тодруулагдсан, бичсэн тэмдэгт зөв/буруугаараа өнгөлөгдөнэ.
+            Зай/дэмжигдээгүй тэмдэгт үргэлж бүдэг, кодлуулахгүй, автоматаар
+            алгасагдана. */}
         <div className="mb-8 max-h-64 overflow-y-auto rounded-lg bg-surface-light p-5">
           <p className="font-mono text-2xl leading-loose tracking-wide">
             {chars.map((c, i) => {
               let cls = "text-ink/25";
-              if (i < currentCharIndex) {
-                cls = charResults[i]?.correct ? "text-green-600" : "text-red-500 underline decoration-red-300";
+              if (!isEncodable(c)) {
+                cls = "text-ink/15";
+              } else if (charResults[i]) {
+                cls = charResults[i].correct ? "text-green-600" : "text-red-500 underline decoration-red-300";
               } else if (i === currentCharIndex) {
                 cls = "text-white bg-accent rounded px-0.5";
               }
