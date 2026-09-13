@@ -21,6 +21,7 @@ export default function AdminPage() {
     <div className="space-y-10 animate-fade-in">
       <h1 className="page-title">🛠️ Админ самбар</h1>
       <UserManagement />
+      <OrderManagement />
       <ProductManagement />
     </div>
   );
@@ -96,6 +97,90 @@ function UserManagement() {
         </table>
         {users.length === 0 && (
           <p className="text-ink/50 text-sm p-6 text-center">Хэрэглэгч олдсонгүй.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+const ORDER_STATUS_BADGE = {
+  new: "bg-accent/15 text-accent-dark",
+  confirmed: "bg-brand-100 text-brand-darker",
+  done: "bg-surface text-ink/60",
+  cancelled: "bg-red-50 text-red-600",
+};
+
+function OrderManagement() {
+  const [orders, setOrders] = useState([]);
+  const [saving, setSaving] = useState(null);
+
+  async function loadOrders() {
+    const res = await fetch("/api/orders");
+    if (res.ok) {
+      const data = await res.json();
+      setOrders(data.orders || []);
+    }
+  }
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  async function changeStatus(orderId, status) {
+    setSaving(orderId);
+    await fetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    setSaving(null);
+    loadOrders();
+  }
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-lg font-bold text-brand-darker">Захиалгууд</h2>
+      <div className="card overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left border-b border-surface text-ink/40">
+              <th className="py-3 px-5 font-medium">Бүтээгдэхүүн</th>
+              <th className="font-medium">Захиалагч</th>
+              <th className="font-medium">Утас</th>
+              <th className="font-medium">Тоо</th>
+              <th className="font-medium">Дүн</th>
+              <th className="font-medium px-5">Төлөв</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((o) => (
+              <tr key={o._id} className="border-b border-surface/60 last:border-0">
+                <td className="py-3 px-5 font-medium text-ink/90">{o.productName}</td>
+                <td className="text-ink/70">{o.customerName}</td>
+                <td className="text-ink/50">{o.customerPhone}</td>
+                <td className="text-ink/50">{o.quantity}</td>
+                <td className="text-ink/70">{(o.price * o.quantity).toLocaleString()}₮</td>
+                <td className="px-5 py-2.5">
+                  <select
+                    value={o.status}
+                    onChange={(e) => changeStatus(o._id, e.target.value)}
+                    disabled={saving === o._id}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold border-0 cursor-pointer disabled:opacity-50 ${
+                      ORDER_STATUS_BADGE[o.status] || "bg-surface text-ink/60"
+                    }`}
+                  >
+                    <option value="new">new</option>
+                    <option value="confirmed">confirmed</option>
+                    <option value="done">done</option>
+                    <option value="cancelled">cancelled</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {orders.length === 0 && (
+          <p className="text-ink/50 text-sm p-6 text-center">Захиалга одоогоор алга байна.</p>
         )}
       </div>
     </section>
