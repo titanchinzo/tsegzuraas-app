@@ -3,15 +3,17 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { REVERSE_MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
-import { Circle, Minus, Check, X } from "lucide-react";
+import { playMorseSequence } from "@/lib/audio";
+import { Circle, Minus } from "lucide-react";
 import ResultPanel from "@/components/ResultPanel";
 
 const GAP_MS = 1500;
 
-// Багшийн Write шалгалт: Random Write Exam-тай (rank/leaderboard-той) ЯГ
+// Багшийн Write шалгалт: Random Write Exam-тай (Score хуудсанд, rank-тай) ЯГ
 // ХОЛБООГҮЙ тусдаа систем. Тухайн сурагчийн багшийн ExamQuestion сангаас
-// нэг бүтэн текстийг татаж, түүнийг эхнээс дуустал нь тэмдэгт тус бүрээр
-// (5-аар бүлэглэж) кодлуулна.
+// нэг бүтэн текстийг татаж, monkeytype.com-ийн хэвшлээр бүтнээр нь харуулж
+// (ирээдүй тэмдэгт сааралтсан, одоогийнх тодруулагдсан), товшсон цэг/зураас
+// бүрийг сонсгож (дуутай), тэмдэгт тус бүрээр кодлуулна.
 export default function TeacherWriteExamPage() {
   const [chars, setChars] = useState(null);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
@@ -20,6 +22,7 @@ export default function TeacherWriteExamPage() {
   const [startedAt, setStartedAt] = useState(0);
   const [finalResult, setFinalResult] = useState(null);
   const [error, setError] = useState(null);
+  const [settings, setSettings] = useState({ wpm: 20, frequency: 600 });
   const gapTimerRef = useRef(null);
   const morseInputRef = useRef("");
 
@@ -37,6 +40,11 @@ export default function TeacherWriteExamPage() {
       setChars(data.text.split(""));
       setStartedAt(Date.now());
     });
+
+    fetch("/api/exam/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data && setSettings(data))
+      .catch(() => {});
   }, []);
 
   // Санамж: setState updater дотор өөр setState дуудахаас зайлсхийж, ref-ээр
@@ -45,6 +53,10 @@ export default function TeacherWriteExamPage() {
   const addSymbol = useCallback(
     (symbol) => {
       if (!chars || finalResult || currentCharIndex >= chars.length) return;
+
+      // Товшсон цэг/зураас бүрийг шууд сонсгоно (жинхэнэ түлхүүр шиг).
+      playMorseSequence(symbol, settings.wpm, { frequency: settings.frequency });
+
       const next = morseInputRef.current + symbol;
       morseInputRef.current = next;
       setMorseInput(next);
@@ -81,7 +93,7 @@ export default function TeacherWriteExamPage() {
         setMorseInput("");
       }, GAP_MS);
     },
-    [chars, currentCharIndex, finalResult, startedAt]
+    [chars, currentCharIndex, finalResult, startedAt, settings]
   );
 
   useEffect(() => {
@@ -142,57 +154,27 @@ export default function TeacherWriteExamPage() {
       </div>
 
       <div className="card p-6">
-        {/* Бүтэн текстийн явц — радио дуудлагын хэвшлээр 5-аар бүлэглэнэ */}
-        <div className="mb-6 flex max-h-64 flex-wrap items-center justify-center gap-x-3 gap-y-3 overflow-y-auto">
-          {chars.map((c, i) => {
-            let cls = "border-surface bg-surface-light text-ink/30";
-            if (i === currentCharIndex) {
-              cls = "border-accent bg-accent/10 text-accent-dark scale-110";
-            } else if (charResults[i]) {
-              cls = charResults[i].correct
-                ? "border-green-300 bg-green-50 text-green-700"
-                : "border-red-300 bg-red-50 text-red-600";
-            }
-            return (
-              <div
-                key={i}
-                className={`relative flex h-12 w-12 items-center justify-center rounded-lg border-2 text-lg font-bold transition-all ${
-                  i > 0 && i % 5 === 0 ? "ml-3" : ""
-                } ${cls}`}
-              >
-                {charResults[i] ? (
-                  <>
-                    <span>{c}</span>
-                    <span
-                      className={`absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-white ${
-                        charResults[i].correct ? "bg-green-500" : "bg-red-500"
-                      }`}
-                    >
-                      {charResults[i].correct ? (
-                        <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                      ) : (
-                        <X className="h-2.5 w-2.5" strokeWidth={3} />
-                      )}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs">{i + 1}</span>
-                )}
-              </div>
-            );
-          })}
+        {/* monkeytype.com маягийн урсгал текст: ирээдүй тэмдэгт сааралтсан,
+            одоогийнх тодруулагдсан, бичсэн тэмдэгт зөв/буруугаараа өнгөлөгдөнэ. */}
+        <div className="mb-8 max-h-64 overflow-y-auto rounded-lg bg-surface-light p-5">
+          <p className="font-mono text-2xl leading-loose tracking-wide">
+            {chars.map((c, i) => {
+              let cls = "text-ink/25";
+              if (i < currentCharIndex) {
+                cls = charResults[i]?.correct ? "text-green-600" : "text-red-500 underline decoration-red-300";
+              } else if (i === currentCharIndex) {
+                cls = "text-white bg-accent rounded px-0.5";
+              }
+              return (
+                <span key={i} className={`${cls} ${i > 0 && i % 5 === 0 ? "ml-2.5" : ""}`}>
+                  {c}
+                </span>
+              );
+            })}
+          </p>
         </div>
 
         <div className="flex flex-col items-center gap-4">
-          <div className="flex flex-col items-center gap-1 bg-brand-darker rounded-2xl px-10 py-4 min-w-[180px]">
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-white/40">
-              Кодлох тэмдэгт
-            </span>
-            <p className="text-4xl font-mono font-bold text-white leading-tight">
-              {chars[currentCharIndex]}
-            </p>
-          </div>
-
           <div className="flex h-12 min-w-[120px] items-center justify-center rounded-lg border border-surface bg-surface-card px-4">
             <span className="font-mono text-2xl tracking-widest text-brand-darker">
               {morseInput || <span className="text-ink/30 text-sm">...</span>}

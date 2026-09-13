@@ -64,10 +64,7 @@ export default function Navbar() {
     ...(role === "teacher" || role === "student" || role === "admin"
       ? [
           { href: "/lessons", label: "Lessons" },
-          { href: "/exam/write", label: "Write Exam" },
-          { href: "/exam/listen", label: "Listen Exam" },
-          { href: "/exam/teacher-write", label: "Teacher Write" },
-          { href: "/exam/teacher-listen", label: "Teacher Listen" },
+          { href: "/exam/score", label: "Score" },
         ]
       : []),
     ...(role === "teacher" || role === "admin" ? [{ href: "/teacher", label: "Teacher" }] : []),

@@ -28,8 +28,25 @@ export default function LessonsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <h1 className="page-title">🎓 Хичээлүүд</h1>
+    <div className="space-y-8 animate-fade-in">
+      <div>
+        <h1 className="page-title">🎓 Хичээлүүд</h1>
+      </div>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-ink/40">Багшийн шалгалт</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <a href="/exam/teacher-write" className="card card-hover p-5 block">
+            <span className="font-bold text-brand-darker">✍️ Teacher Write</span>
+            <p className="text-sm text-ink/55 mt-1">Багшийн өгсөн текстийг түлхүүрээр кодлох шалгалт.</p>
+          </a>
+          <a href="/exam/teacher-listen" className="card card-hover p-5 block">
+            <span className="font-bold text-brand-darker">🎧 Teacher Listen</span>
+            <p className="text-sm text-ink/55 mt-1">Багшийн өгсөн текстийг сонсож бичих шалгалт.</p>
+          </a>
+        </div>
+      </section>
+
       <div className="grid gap-4">
         {lessons.map((lesson) => (
           <div key={lesson._id} className="card p-5">
