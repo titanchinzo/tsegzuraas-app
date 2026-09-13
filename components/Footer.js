@@ -26,12 +26,12 @@ export default function Footer() {
             <input
               type="email"
               placeholder="Таны и-мэйл"
-              className="px-3.5 py-2 rounded-md text-ink bg-white/95 border border-white/10 placeholder:text-ink/40 focus:bg-white transition-colors text-sm"
+              className="px-3.5 py-2 rounded-md text-slate-900 bg-white/95 border border-white/10 placeholder:text-slate-400 focus:bg-white focus-visible:outline-white/60 transition-colors text-sm"
             />
             <textarea
               placeholder="Зурвас..."
               rows={2}
-              className="px-3.5 py-2 rounded-md text-ink bg-white/95 border border-white/10 placeholder:text-ink/40 focus:bg-white transition-colors text-sm resize-none"
+              className="px-3.5 py-2 rounded-md text-slate-900 bg-white/95 border border-white/10 placeholder:text-slate-400 focus:bg-white focus-visible:outline-white/60 transition-colors text-sm resize-none"
             />
             <button type="submit" className="btn-accent w-fit !px-4 !py-2">
               Илгээх
