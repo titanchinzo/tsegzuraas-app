@@ -27,8 +27,9 @@ export default function HomePage() {
           <p className="max-w-2xl mx-auto text-lg text-white/70 leading-relaxed">
             Телеграфын түлхүүр ашиглан{" "}
             <span className="text-accent font-semibold">морзын кодоор бичих</span>,
-            дадлага хийх боломжоор хангаж, сургалтын орчныг бүрдүүлэх
-            зорилготой цахим платформ.
+            дадлага хийх боломжоор хангаж, сургалтын орчныг бүрдүүлэх зорилготой
+            цахим систем. Радио холбооны сонирхогчид, сургалтын байгууллагууд,
+            ур чадвараа хөгжүүлэх хүсэлтэй хэн бүхэнд зориулав.
           </p>
           <div className="flex flex-wrap justify-center gap-3 pt-4">
             <a href="/write" className="btn-accent">
