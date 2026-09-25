@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { REVERSE_MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
-import { playMorseSequence } from "@/lib/audio";
+import { queueSymbol } from "@/lib/audio";
 import { Circle, Minus, Check, X } from "lucide-react";
 import ListenTrainer from "@/components/ListenTrainer";
 import ResultPanel from "@/components/ResultPanel";
@@ -101,7 +101,7 @@ function WriteExamPanel() {
   const addSymbol = useCallback(
     (symbol) => {
       if (lastResult || currentCharIndex >= chars.length) return;
-      playMorseSequence(symbol, KEY_WPM);
+      queueSymbol(symbol, KEY_WPM);
       const next = morseInputRef.current + symbol;
       morseInputRef.current = next;
       setMorseInput(next);

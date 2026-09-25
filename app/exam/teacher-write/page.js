@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { REVERSE_MORSE_MAP, MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
-import { playMorseSequence } from "@/lib/audio";
+import { queueSymbol } from "@/lib/audio";
 import { Circle, Minus } from "lucide-react";
 import ResultPanel from "@/components/ResultPanel";
 
@@ -74,8 +74,9 @@ export default function TeacherWriteExamPage() {
     (symbol) => {
       if (!chars || finalResult || currentCharIndex >= chars.length) return;
 
-      // Товшсон цэг/зураас бүрийг шууд сонсгоно (жинхэнэ түлхүүр шиг).
-      playMorseSequence(symbol, settings.wpm, { frequency: settings.frequency });
+      // Товшсон цэг/зураас бүрийг сонсгоно (жинхэнэ түлхүүр шиг). Дараалалд
+      // ордог тул түлхүүрээс нэг дор ирсэн тэмдэгтүүд ч давхцахгүй.
+      queueSymbol(symbol, settings.wpm, settings.frequency);
 
       const next = morseInputRef.current + symbol;
       morseInputRef.current = next;

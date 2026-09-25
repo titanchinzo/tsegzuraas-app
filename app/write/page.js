@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { randomChars, REVERSE_MORSE_MAP } from "@/lib/morse";
-import { playMorseSequence } from "@/lib/audio";
+import { queueSymbol } from "@/lib/audio";
 import { PenTool, RotateCcw, ArrowRight, Minus, Circle, Check, X } from "lucide-react";
 import Link from "next/link";
 
@@ -41,7 +41,7 @@ export default function WritePracticePage() {
   const addSymbol = useCallback(
     (symbol) => {
       if (roundComplete) return;
-      playMorseSequence(symbol, wpm);
+      queueSymbol(symbol, wpm);
       const next = morseInputRef.current + symbol;
       morseInputRef.current = next;
       setMorseInput(next);
