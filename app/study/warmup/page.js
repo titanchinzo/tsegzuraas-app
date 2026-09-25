@@ -21,8 +21,8 @@ import {
   VolumeX,
   Zap,
 } from "lucide-react";
-import { MORSE_MAP, CATEGORIES } from "@/lib/morse";
-import { playTone } from "@/lib/audio";
+import { MORSE_MAP } from "@/lib/morse";
+import { playMorseSequence, playTone } from "@/lib/audio";
 
 const MAX_HP = 100;
 const HEAL_PER_LETTER = 5; // зөв бичсэн үсэг бүр амь нөхнө
@@ -33,9 +33,23 @@ const TICK_MS = 50;
 const BEST_KEY = "tsegzuraas.warmup.best.v2";
 const SOUND_KEY = "tsegzuraas.warmup.sound";
 
+// Нэг үсэг дээр хэр удаан тогтох вэ. Rawson & Dunlosky (2011): шинэ зүйлийг
+// 3 удаа зөв санаж гаргатал давтах нь хамгийн үр дүнтэй — 4 эсвэл 7 удаа
+// болгосон ч урт хугацааны санах ойд нэмэр болоогүй. Тиймээс энгийн мангас
+// бүр НЭГ үсэгтэй бөгөөд түүнийг 3 удаа ДАРААЛАН зөв бичвэл ялагдана.
+const DRILL_REPS = 3;
+// Koch арга: мэдэх үсгүүдээ 90%-иас дээш зөв бичиж байж шинэ үсэг нэмнэ.
+// Сүүлийн 20 оролдлогын нарийвчлал үүнээс доош бол дараагийн үе шинэ үсэг
+// оруулахгүй, алдсан үсгүүдийг давтуулна.
+const KOCH_ACCURACY = 0.9;
+const RECENT_WINDOW = 20;
+const MIN_RECENT = 5;
+
 // Санамж — үсгийн доорх цэг зураас. Эхний 30 секундэд бүгд харагдана, дараа
 // нь 2.5 минутын турш нэг нэгээрээ алга болж, 3 минут тоглосны дараа огт
 // үлдэхгүй. Цаг нь зөвхөн тулаан явж байхад гүйнэ (баннер, шилжилтэд биш).
+// Үл хамаарах зүйл: мангасын үсгийг анх удаа (эсвэл алдсаны дараа) бичихэд
+// санамж үргэлж харагдана — үзээгүй үсгийг цээжлэх боломжгүй.
 const HINT_GRACE_MS = 30000;
 const HINT_FADE_MS = 150000;
 
@@ -46,6 +60,11 @@ const BURN_MS = 5000;
 const BURN_TICK_MS = 1000;
 const BURN_DAMAGE = 3;
 const TRIPLE_GAP_MS = 300;
+
+// Тоглоомд гарах тэмдэгтүүд — төхөөрөмжийн кодын хүснэгт дээр Д, Ф, Ү, Ъ-г
+// нэмсэн (хүснэгт нь кодоор хайдаг тул Ю-тэй ижил кодтой Ү орж чадаагүй).
+// Код нь lib/morse.js-ийн MORSE_MAP-аас. Ө-гийн код тодорхойгүй тул ороогүй.
+const GAME_CHARS = "АБВГДЕЖЗИЙКЛМНОПРСТУҮФХЦЧШЩЪЫЬЭЮЯ0123456789?,.=/".split("");
 
 const MINIONS = [
   { emoji: "🦇", name: "Сарьсан багваахай", attackName: "Хазалт", interval: 4200, damage: 6 },
@@ -103,43 +122,105 @@ const BOSSES = [
   },
 ];
 
-const LETTERS = CATEGORIES.english;
-
-// Эхний үеүдэд богино кодтой үсэг, ахих тусам урт код, дараа нь тоо нэмэгдэнэ.
-function poolForStage(stage) {
-  if (stage === 1) return LETTERS.filter((c) => MORSE_MAP[c].length <= 2);
-  if (stage === 2) return LETTERS.filter((c) => MORSE_MAP[c].length <= 3);
-  if (stage <= 4) return LETTERS;
-  return LETTERS.concat(CATEGORIES.numbers);
-}
-
-function poolLabel(stage) {
-  if (stage === 1) return "Хамгийн богино кодтой үсгүүд";
-  if (stage === 2) return "Гурван тэмдэгт хүртэлх үсгүүд";
-  if (stage <= 4) return "Бүх үсэг";
-  return "Үсэг ба тоо";
-}
-
 function bossForStage(stage) {
   return BOSSES[(stage - 1) % BOSSES.length];
 }
 
-function makeLetters(count, stage) {
-  const pool = poolForStage(stage);
-  const letters = [];
-  let prev = null;
-  while (letters.length < count) {
-    const char = pool[Math.floor(Math.random() * pool.length)];
-    if (char === prev) continue;
-    prev = char;
-    // Санамжийн түвшин hintSeed-ээс доош ормогц тухайн үсгийн санамж
-    // нуугдана — тиймээс санамжууд нэг дор биш, нэг нэгээрээ алга болдог.
-    letters.push({ char, pattern: MORSE_MAP[char], hintSeed: Math.random() });
+function shuffle(list) {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return letters;
+  return a;
 }
 
-function makeEnemy(stage, wave) {
+// Сурах дараалал: богино кодоос урт руу (Е, Т → А, И, М, Н → ...). Ижил
+// урттай тэмдэгтүүдийн дарааллыг тоглоом бүрд холино.
+function buildOrder() {
+  const byLength = {};
+  GAME_CHARS.forEach((c) => {
+    const len = MORSE_MAP[c].length;
+    if (!byLength[len]) byLength[len] = [];
+    byLength[len].push(c);
+  });
+  return Object.keys(byLength)
+    .sort((a, b) => a - b)
+    .flatMap((len) => shuffle(byLength[len]));
+}
+
+// Ижил үсэг хоёр дараалж гарахгүйгээр холино (боломжгүй бол ойролцоо хувилбар).
+function spreadOut(chars) {
+  let result = shuffle(chars);
+  for (let t = 0; t < 30 && result.some((c, i) => i > 0 && c === result[i - 1]); t++) {
+    result = shuffle(chars);
+  }
+  return result;
+}
+
+function makeLetter(char, intro = false) {
+  // intro: санамж заавал харагдах давталт (шинэ үсгийн эхний удаа).
+  // hintSeed: санамжийн түвшин үүнээс доош ормогц санамж нуугдана — тиймээс
+  // санамжууд нэг дор биш, нэг нэгээрээ алга болдог.
+  return { char, pattern: MORSE_MAP[char], intro, hintSeed: Math.random() };
+}
+
+function recentAccuracy(g) {
+  if (g.recent.length < MIN_RECENT) return 1;
+  return g.recent.filter(Boolean).length / g.recent.length;
+}
+
+function recordAttempt(g, ok) {
+  g.recent = [...g.recent, ok].slice(-RECENT_WINDOW);
+}
+
+// Үе эхлэхэд тухайн үеийн 3 мангасын үсгийг сонгоно (Koch арга).
+function planStage(g) {
+  const known = Object.keys(g.known);
+  const weak = known
+    .filter((c) => g.known[c].miss > 0)
+    .sort((a, b) => g.known[b].miss - g.known[a].miss);
+  const leastReviewed = [...known].sort((a, b) => g.known[a].reviews - g.known[b].reviews);
+  const gateOpen = recentAccuracy(g) >= KOCH_ACCURACY;
+  const plan = [];
+  const take = (char, isNew) => {
+    if (plan.length < MINIONS_PER_STAGE && !plan.some((p) => p.char === char)) {
+      plan.push({ char, isNew });
+    }
+  };
+
+  if (gateOpen) {
+    while (plan.length < MINIONS_PER_STAGE && g.nextNew < g.order.length) {
+      const c = g.order[g.nextNew++];
+      g.known[c] = { miss: 0, reviews: 0 };
+      take(c, true);
+    }
+  }
+  // Босго хаалттай (эсвэл бүх тэмдэгтийг сурсан) бол эхлээд хамгийн их
+  // алдсан, дараа нь хамгийн бага давтсан үсгүүд.
+  [...weak, ...leastReviewed].forEach((c) => take(c, false));
+
+  g.stagePlan = plan;
+  g.stageReview = !gateOpen;
+}
+
+// Босс: энэ үеийн үсэг бүр 2 удаа, үлдсэнийг нь өмнө сурсан үсгүүдээс
+// хамгийн бага давтсанаас нь эхлэн нөхнө. Ингэснээр хуучин үсэг дараагийн
+// боссуудад зайтай эргэж гарна (spaced relearning).
+function bossLetters(g, count) {
+  const stageChars = g.stagePlan.map((p) => p.char);
+  const chars = stageChars.flatMap((c) => [c, c]);
+  const older = Object.keys(g.known)
+    .filter((c) => !stageChars.includes(c))
+    .sort((a, b) => g.known[a].reviews - g.known[b].reviews);
+  for (let i = 0; chars.length < count && older.length; i++) {
+    chars.push(older[i % older.length]);
+  }
+  return spreadOut(chars.slice(0, count)).map((c) => makeLetter(c));
+}
+
+function makeEnemy(g) {
+  const { stage, wave } = g;
   if (wave >= MINIONS_PER_STAGE) {
     const base = bossForStage(stage);
     const tier = Math.floor((stage - 1) / BOSSES.length);
@@ -148,11 +229,12 @@ function makeEnemy(stage, wave) {
       isBoss: true,
       damage: Math.round(base.damage * (1 + 0.3 * tier)),
       interval: Math.round(base.interval * Math.pow(0.88, tier)),
-      letters: makeLetters(Math.min(12, 5 + stage), stage),
+      letters: bossLetters(g, Math.min(12, 5 + stage)),
       index: 0,
       charge: 0,
     };
   }
+  const drill = g.stagePlan[wave % g.stagePlan.length];
   const base = MINIONS[Math.floor(Math.random() * MINIONS.length)];
   return {
     ...base,
@@ -160,8 +242,11 @@ function makeEnemy(stage, wave) {
     attack: "hit",
     damage: Math.round(base.damage * (1 + 0.1 * (stage - 1))),
     interval: Math.round(base.interval * Math.max(0.65, 1 - 0.05 * (stage - 1))),
-    letters: makeLetters(Math.min(4, 2 + Math.floor((stage - 1) / 2)), stage),
+    isNew: drill.isNew,
+    letters: [makeLetter(drill.char, true)],
     index: 0,
+    streak: 0,
+    reps: DRILL_REPS,
     charge: 0,
   };
 }
@@ -172,7 +257,8 @@ function hintLevel(elapsed) {
 }
 
 function hintShown(g, letter, now) {
-  return now >= g.fogUntil && letter.hintSeed < hintLevel(g.elapsed);
+  if (now < g.fogUntil) return false;
+  return letter.intro || letter.hintSeed < hintLevel(g.elapsed);
 }
 
 // Мангасын хаан шархдах тусам уурлаж, дайралт нь хурдасна.
@@ -180,6 +266,12 @@ function attackInterval(e) {
   if (e.attack !== "triple") return e.interval;
   const left = (e.letters.length - e.index) / e.letters.length;
   return e.interval * (0.55 + 0.45 * left);
+}
+
+// Мангасын амь: энгийн мангаст — дараалсан зөв бичилтээс үлдсэн нь,
+// боссод — бичээгүй үлдсэн үсэг.
+function enemyLife(e) {
+  return e.isBoss ? (e.letters.length - e.index) / e.letters.length : (e.reps - e.streak) / e.reps;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,6 +298,14 @@ function newGame(now) {
     correct: 0,
     mistakes: 0,
     bossesDefeated: 0,
+    // Сурах явц: дараалал, сурсан тэмдэгт бүрийн алдаа/давталт, сүүлийн
+    // оролдлогууд (Koch босго), тухайн үеийн төлөвлөгөө.
+    order: buildOrder(),
+    nextNew: 0,
+    known: {},
+    recent: [],
+    stagePlan: [],
+    stageReview: false,
     fogUntil: 0,
     frozenUntil: 0,
     burn: null,
@@ -252,7 +352,8 @@ function showBanner(g, now, kind, duration) {
 }
 
 function spawnEnemy(g, now) {
-  const enemy = makeEnemy(g.stage, g.wave);
+  if (g.wave === 0) planStage(g);
+  const enemy = makeEnemy(g);
   enemy.uid = ++g.enemyUid;
   g.enemy = enemy;
   g.input = "";
@@ -260,7 +361,9 @@ function spawnEnemy(g, now) {
   g.fx.enemyAnim = "spawn";
   g.fx.enemyAnimKey += 1;
   if (enemy.isBoss) showBanner(g, now, "boss", 3200);
-  else if (g.wave === 0) showBanner(g, now, "stage", 2000);
+  else if (g.wave === 0) showBanner(g, now, "stage", 2800);
+  // Сурах үсгийг эхлээд чихээр сонсгоно (Koch: үсгийг дуугаар нь танина).
+  if (!enemy.isBoss && g.sound) playMorseSequence(enemy.letters[0].pattern, 18);
 }
 
 function enemyAttack(g, now) {
@@ -327,6 +430,7 @@ function completeLetter(g, now) {
   const letter = e.letters[e.index];
   const hinted = hintShown(g, letter, now);
 
+  recordAttempt(g, true);
   g.input = "";
   g.combo += 1;
   g.bestCombo = Math.max(g.bestCombo, g.combo);
@@ -348,8 +452,20 @@ function completeLetter(g, now) {
   g.fx.enemyAnimKey += 1;
   sfx(g, 90, 880);
 
-  e.index += 1;
-  if (e.index >= e.letters.length) defeatEnemy(g, now);
+  if (e.isBoss) {
+    g.known[letter.char].reviews += 1;
+    e.index += 1;
+    if (e.index >= e.letters.length) defeatEnemy(g, now);
+    return;
+  }
+
+  // Энгийн мангас: нэг үсгээ DRILL_REPS удаа дараалан зөв бичтэл ялагдахгүй.
+  letter.intro = false;
+  e.streak += 1;
+  if (e.streak >= e.reps) {
+    g.known[letter.char].miss = 0;
+    defeatEnemy(g, now);
+  }
 }
 
 function pressSymbol(g, now, symbol) {
@@ -364,10 +480,18 @@ function pressSymbol(g, now, symbol) {
   const letter = e.letters[e.index];
   if (symbol !== letter.pattern[g.input.length]) {
     // Буруу товч — мангас тэр дороо дайрна.
+    recordAttempt(g, false);
+    g.known[letter.char].miss += 1;
     g.input = "";
     g.combo = 0;
     g.mistakes += 1;
-    addFloater(g, now, "Буруу!", "damage", "center");
+    if (!e.isBoss) {
+      // Цээжлэх үед алдвал дараалал эхнээсээ эхэлж, санамжийг дахин
+      // харуулна (алдааны дараах эргэх холбоо).
+      e.streak = 0;
+      letter.intro = true;
+    }
+    addFloater(g, now, e.isBoss ? "Буруу!" : "Буруу! Дахин эхнээс", "damage", "center");
     e.charge = 0;
     enemyAttack(g, now);
     return;
@@ -555,14 +679,16 @@ export default function WarmupPage() {
   useEffect(() => {
     function onKeyDown(e) {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      const k = e.key;
-      if (k === "q" || k === "Q" || k === ".") {
+      // e.code нь гарын байрлалаас (монгол/англи) үл хамаарна — монгол
+      // байрлалтай үед q/w товч "ф"/"ц" гэж ирдэг тул e.key хангалтгүй.
+      const c = e.code;
+      if (c === "KeyQ" || c === "Period" || c === "NumpadDecimal" || e.key === ".") {
         e.preventDefault();
         press(".");
-      } else if (k === "w" || k === "W" || k === "-") {
+      } else if (c === "KeyW" || c === "Minus" || c === "NumpadSubtract" || e.key === "-") {
         e.preventDefault();
         press("-");
-      } else if (k === " " && gRef.current?.phase !== "playing") {
+      } else if (c === "Space" && gRef.current?.phase !== "playing") {
         e.preventDefault();
         start();
       }
@@ -602,6 +728,7 @@ export default function WarmupPage() {
   const current = e && !e.dead ? e.letters[e.index] : null;
   const currentHinted = current ? hintShown(g, current, now) : false;
   const charge = e && !e.dead ? Math.min(1, e.charge / attackInterval(e)) : 0;
+  const learned = g ? Object.keys(g.known).length : 0;
   const accuracy =
     g && g.correct + g.mistakes > 0 ? Math.round((g.correct / (g.correct + g.mistakes)) * 100) : 100;
   const stageBoss = bossForStage(g ? g.stage : 1);
@@ -644,6 +771,13 @@ export default function WarmupPage() {
             </p>
           </div>
           <div>
+            <p className="label">Сурсан</p>
+            <p className="text-xl font-bold tabular-nums text-brand-darker">
+              {learned}
+              <span className="text-sm font-semibold text-ink/40">/{GAME_CHARS.length}</span>
+            </p>
+          </div>
+          <div>
             <p className="label">Санамж</p>
             <div className="mt-1 flex items-center gap-2">
               {level > 0 ? (
@@ -676,11 +810,11 @@ export default function WarmupPage() {
       {/* Тулааны талбар */}
       <div
         ref={arenaRef}
-        className="relative h-[470px] overflow-hidden rounded-xl border border-brand-900 bg-brand-darker bg-gradient-to-b from-brand-darker to-brand-900 text-white shadow-soft"
+        className="relative h-[480px] overflow-hidden rounded-xl border border-brand-900 bg-brand-darker bg-gradient-to-b from-brand-darker to-brand-900 text-white shadow-soft"
       >
         {e && (
           <div className="relative z-10 flex h-full flex-col px-4 pb-4 pt-3">
-            {/* Мангасын нэр, амь (үлдсэн үсэг) */}
+            {/* Мангасын нэр, амь */}
             <div>
               <div className="flex items-center justify-between gap-2 text-xs font-semibold">
                 <span className="flex min-w-0 items-center gap-1.5">
@@ -700,7 +834,7 @@ export default function WarmupPage() {
                   className={`h-full rounded-full transition-[width] duration-300 ${
                     e.isBoss ? "bg-red-500" : "bg-orange-400"
                   }`}
-                  style={{ width: `${((e.letters.length - e.index) / e.letters.length) * 100}%` }}
+                  style={{ width: `${enemyLife(e) * 100}%` }}
                 />
               </div>
             </div>
@@ -733,48 +867,75 @@ export default function WarmupPage() {
               </div>
             </div>
 
-            {/* Бичих үсгүүд — одоогийнх том, дараагийнх нь жижиг */}
-            <div className="flex h-32 items-center justify-center gap-2.5">
-              {current && (
-                <div
-                  key={`${e.uid}-${e.index}`}
-                  className="flex min-w-[6rem] flex-col items-center gap-2.5 rounded-2xl border-2 border-accent-light/80 bg-white/10 px-3 pb-3 pt-2 shadow-[0_0_28px_rgba(94,234,212,0.3)]"
-                >
-                  <span className="font-mono text-5xl font-bold leading-none">{current.char}</span>
-                  <div className="relative h-2 w-full">
-                    <div
-                      className={`absolute inset-0 transition-opacity duration-700 ${
-                        currentHinted ? "opacity-100" : "opacity-0"
-                      }`}
-                    >
-                      <HintGlyphs pattern={current.pattern} typed={g.input.length} />
-                    </div>
-                    {/* Санамжгүй үед зөвхөн өөрийн оруулсныг харуулна */}
-                    {!currentHinted && g.input && (
-                      <div className="absolute inset-0">
-                        <HintGlyphs pattern={g.input} typed={g.input.length} />
-                      </div>
+            {/* Бичих үсэг(үүд) */}
+            <div className="flex min-h-[9rem] flex-col items-center justify-center gap-2.5">
+              <div className="flex items-center justify-center gap-2.5">
+                {current && (
+                  <div
+                    key={`${e.uid}-${e.index}`}
+                    className="relative flex min-w-[6rem] flex-col items-center gap-2.5 rounded-2xl border-2 border-accent-light/80 bg-white/10 px-3 pb-3 pt-2 shadow-[0_0_28px_rgba(94,234,212,0.3)]"
+                  >
+                    {!e.isBoss && (
+                      <span
+                        className={`absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                          e.isNew ? "bg-accent text-white" : "bg-amber-400 text-brand-900"
+                        }`}
+                      >
+                        {e.isNew ? "Шинэ" : "Давтлага"}
+                      </span>
                     )}
+                    <span className="font-mono text-5xl font-bold leading-none">{current.char}</span>
+                    <div className="relative h-2 w-full">
+                      <div
+                        className={`absolute inset-0 transition-opacity duration-700 ${
+                          currentHinted ? "opacity-100" : "opacity-0"
+                        }`}
+                      >
+                        <HintGlyphs pattern={current.pattern} typed={g.input.length} />
+                      </div>
+                      {/* Санамжгүй үед зөвхөн өөрийн оруулсныг харуулна */}
+                      {!currentHinted && g.input && (
+                        <div className="absolute inset-0">
+                          <HintGlyphs pattern={g.input} typed={g.input.length} />
+                        </div>
+                      )}
+                    </div>
                   </div>
+                )}
+                {/* Боссын дараагийн үсгүүд */}
+                {current &&
+                  e.isBoss &&
+                  e.letters.slice(e.index + 1, e.index + 4).map((l, i) => (
+                    <div
+                      key={`${e.uid}-${e.index + 1 + i}`}
+                      className="flex min-w-[3rem] flex-col items-center gap-2 rounded-xl bg-white/5 px-1.5 pb-2 pt-1.5"
+                      style={{ opacity: 0.75 - i * 0.2 }}
+                    >
+                      <span className="font-mono text-2xl font-bold leading-none text-white/85">{l.char}</span>
+                      <div
+                        className={`h-1 transition-opacity duration-700 ${
+                          hintShown(g, l, now) ? "opacity-100" : "opacity-0"
+                        }`}
+                      >
+                        <HintGlyphs pattern={l.pattern} small />
+                      </div>
+                    </div>
+                  ))}
+              </div>
+              {/* Цээжлэх явц: хэдэн удаа дараалан зөв бичсэн */}
+              {current && !e.isBoss && (
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-white/55">
+                  <span className="flex gap-1">
+                    {Array.from({ length: e.reps }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-2 w-2 rounded-full ${i < e.streak ? "bg-accent-light" : "bg-white/20"}`}
+                      />
+                    ))}
+                  </span>
+                  {e.reps} удаа дараалан бич
                 </div>
               )}
-              {current &&
-                e.letters.slice(e.index + 1, e.index + 4).map((l, i) => (
-                  <div
-                    key={`${e.uid}-${e.index + 1 + i}`}
-                    className="flex min-w-[3rem] flex-col items-center gap-2 rounded-xl bg-white/5 px-1.5 pb-2 pt-1.5"
-                    style={{ opacity: 0.75 - i * 0.2 }}
-                  >
-                    <span className="font-mono text-2xl font-bold leading-none text-white/85">{l.char}</span>
-                    <div
-                      className={`h-1 transition-opacity duration-700 ${
-                        hintShown(g, l, now) ? "opacity-100" : "opacity-0"
-                      }`}
-                    >
-                      <HintGlyphs pattern={l.pattern} small />
-                    </div>
-                  </div>
-                ))}
             </div>
 
             {/* Тоглогчийн амь, нөлөөнүүд */}
@@ -862,6 +1023,9 @@ export default function WarmupPage() {
                     {e.attackName}
                   </p>
                   <p className="mx-auto mt-2 max-w-xs text-sm text-white/65">{e.desc}</p>
+                  <p className="mx-auto mt-2 max-w-xs text-xs text-white/45">
+                    Сурсан үсгүүдээр чинь шалгана.
+                  </p>
                 </>
               ) : (
                 <>
@@ -869,7 +1033,28 @@ export default function WarmupPage() {
                     {g.stage === 1 ? "Тулаан эхэллээ" : "Дараагийн үе"}
                   </p>
                   <p className="mt-1 font-display text-5xl font-bold">Үе {g.stage}</p>
-                  <p className="mt-2 text-sm text-white/65">{poolLabel(g.stage)}</p>
+                  <div className="mt-4 flex justify-center gap-2">
+                    {g.stagePlan.map((p) => (
+                      <span
+                        key={p.char}
+                        className="flex min-w-[3rem] flex-col items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5"
+                      >
+                        <span className="font-mono text-2xl font-bold">{p.char}</span>
+                        <span
+                          className={`text-[10px] font-semibold uppercase tracking-wider ${
+                            p.isNew ? "text-accent-light" : "text-amber-300"
+                          }`}
+                        >
+                          {p.isNew ? "Шинэ" : "Давтлага"}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                  {g.stageReview && (
+                    <p className="mx-auto mt-3 max-w-xs text-xs text-amber-200/80">
+                      Нарийвчлал 90%-иас доош байна — шинэ үсэг нэмэхээс өмнө алдсан үсгүүдээ давтана.
+                    </p>
+                  )}
                   <p className="mt-3 text-sm text-white/65">
                     Эцэст нь: {stageBoss.emoji} <strong className="text-white">{stageBoss.name}</strong>
                   </p>
@@ -888,17 +1073,20 @@ export default function WarmupPage() {
                 <p className="text-lg font-bold">Мангастай тулаанд бэлэн үү?</p>
                 <ul className="max-w-sm space-y-1.5 text-left text-sm text-white/70">
                   <li>
-                    • Мангасын үсгийг цэг (
+                    • Мангас бүр нэг үсэгтэй. Түүнийг цэг (
                     <kbd className="rounded border border-white/20 px-1 font-mono">q</kbd>) ба зураасаар (
-                    <kbd className="rounded border border-white/20 px-1 font-mono">w</kbd>) бич.
+                    <kbd className="rounded border border-white/20 px-1 font-mono">w</kbd>){" "}
+                    <strong className="text-white">{DRILL_REPS} удаа дараалан</strong> зөв бичвэл ялна.
                   </li>
                   <li>
-                    • Зөв үсэг бүр мангасыг шархдуулж, чамд{" "}
-                    <strong className="text-emerald-300">+{HEAL_PER_LETTER} амь</strong> нөхнө.
+                    • Зөв үсэг бүр чамд <strong className="text-emerald-300">+{HEAL_PER_LETTER} амь</strong>{" "}
+                    нөхнө. Буруу бичвэл мангас дайрч, тоо эхнээсээ эхэлнэ.
                   </li>
-                  <li>• Буруу товчвол, эсвэл удааширвал мангас дайрна.</li>
-                  <li>• Тоглох тусам үсгийн доорх санамж алга болж, 3 минутын дараа огт үлдэхгүй.</li>
-                  <li>• Үе бүрийн эцэст өөр өөр дайралттай босс гарна.</li>
+                  <li>• Удааширвал ч мангас дайрна.</li>
+                  <li>
+                    • Үе бүрийн эцэст босс сурсан үсгүүдээр чинь шалгана. 90%-иас доош бол шинэ үсэг нэмэгдэхгүй.
+                  </li>
+                  <li>• Тоглох тусам санамж алга болно — шинэ үсгийн эхний удаад л харагдана.</li>
                 </ul>
                 <p className="text-3xl tracking-widest" aria-hidden>
                   {BOSSES.map((b) => b.emoji).join(" ")}
@@ -924,7 +1112,7 @@ export default function WarmupPage() {
                   {[
                     ["Оноо", g.score],
                     ["Хүрсэн үе", g.stage],
-                    ["Ялсан босс", g.bossesDefeated],
+                    ["Сурсан тэмдэгт", learned],
                     ["Нарийвчлал", `${accuracy}%`],
                     ["Урт комбо", g.bestCombo],
                     ["Хугацаа", formatTime(g.elapsed)],
