@@ -154,7 +154,7 @@ export default function StudyPage() {
               Гар халаалт
             </span>
             <span className="block text-sm text-ink/55">
-              Унаж буй цэг зураасыг хэмнэлээр барих тоглоом.
+              Үсгийг морзоор бичиж мангас, боссуудыг ял.
             </span>
           </span>
         </Link>
