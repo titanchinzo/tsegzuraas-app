@@ -22,7 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 import { MORSE_MAP } from "@/lib/morse";
-import { playMorseSequence, playTone } from "@/lib/audio";
+import { queueCharGap, queueEffect, queueSymbol } from "@/lib/audio";
 
 const MAX_HP = 100;
 const HEAL_PER_LETTER = 5; // зөв бичсэн үсэг бүр амь нөхнө
@@ -60,6 +60,14 @@ const BURN_MS = 5000;
 const BURN_TICK_MS = 1000;
 const BURN_DAMAGE = 3;
 const TRIPLE_GAP_MS = 300;
+
+// Цэг зураасны дууны хурд (1 нэгж = 60ms).
+const GAME_WPM = 20;
+// Телеграфын түлхүүр үсгийг бүтнээр нь ("---.") нэг дор илгээдэг. Буруу
+// тэмдэгтийн дараа энэ хугацаанд ирсэн тэмдэгтүүд нь тэр буруу үсгийн
+// үлдэгдэл тул тоолохгүй — эс бөгөөс нэг буруу үсэгт мангас хэд хэдэн удаа
+// дайрдаг байв. Хүн алдаагаа хараад дахин товшиход үүнээс удаан болдог.
+const MISTAKE_LOCK_MS = 300;
 
 // Тоглоомд гарах тэмдэгтүүд — төхөөрөмжийн кодын хүснэгт дээр Д, Ф, Ү, Ъ-г
 // нэмсэн (хүснэгт нь кодоор хайдаг тул Ю-тэй ижил кодтой Ү орж чадаагүй).
@@ -308,6 +316,7 @@ function newGame(now) {
     stageReview: false,
     fogUntil: 0,
     frozenUntil: 0,
+    lockedUntil: 0,
     burn: null,
     pendingHits: [],
     banner: null,
@@ -320,8 +329,10 @@ function newGame(now) {
   };
 }
 
-function sfx(g, ms, frequency) {
-  if (g.sound) playTone(ms, frequency);
+// Тоглоомын дохио (цохилт г.м) — цэг зураасыг дарахгүйн тулд чимээгүй,
+// өөр тембртэй бөгөөд дараалалд морзын дараа тоглогдоно.
+function effect(g, ms, frequency, volume) {
+  if (g.sound) queueEffect(ms, frequency, { volume });
 }
 
 function addFloater(g, now, text, tone, at) {
@@ -343,7 +354,7 @@ function hurt(g, now, damage, kind) {
   g.fx.playerHit += 1;
   g.fx.hitKind = kind;
   addFloater(g, now, `-${damage}`, "damage", "player");
-  sfx(g, 160, 140);
+  effect(g, 150, 130, 0.18);
   if (g.hp <= 0) g.phase = "over";
 }
 
@@ -363,7 +374,10 @@ function spawnEnemy(g, now) {
   if (enemy.isBoss) showBanner(g, now, "boss", 3200);
   else if (g.wave === 0) showBanner(g, now, "stage", 2800);
   // Сурах үсгийг эхлээд чихээр сонсгоно (Koch: үсгийг дуугаар нь танина).
-  if (!enemy.isBoss && g.sound) playMorseSequence(enemy.letters[0].pattern, 18);
+  if (!enemy.isBoss && g.sound) {
+    enemy.letters[0].pattern.split("").forEach((s) => queueSymbol(s, GAME_WPM));
+    queueCharGap(GAME_WPM);
+  }
 }
 
 function enemyAttack(g, now) {
@@ -405,7 +419,7 @@ function defeatEnemy(g, now) {
   const bonus = (e.isBoss ? 100 : 20) * g.stage;
   g.score += bonus;
   addFloater(g, now, e.isBoss ? `Босс ялагдлаа! +${bonus}` : `+${bonus}`, "score", "enemy");
-  sfx(g, 180, 990);
+  effect(g, 180, 660, 0.1);
 
   // Тулаан дуусмагц сөрөг нөлөөнүүд арилна.
   g.fogUntil = 0;
@@ -450,7 +464,9 @@ function completeLetter(g, now) {
 
   g.fx.enemyAnim = "hit";
   g.fx.enemyAnimKey += 1;
-  sfx(g, 90, 880);
+  // Үсэг бүрийн дараа дохио тоглуулахгүй — морзыг сонсоход саад болдог.
+  // Зөвхөн тэмдэгт хоорондын завсар үлдээнэ.
+  if (g.sound) queueCharGap(GAME_WPM);
 
   if (e.isBoss) {
     g.known[letter.char].reviews += 1;
@@ -476,10 +492,17 @@ function pressSymbol(g, now, symbol) {
     addFloater(g, now, "Хөлдсөн!", "freeze", "center");
     return;
   }
+  // Буруу үсгийн үлдэгдэл тэмдэгтүүд (MISTAKE_LOCK_MS-ийг үз).
+  if (now < g.lockedUntil) return;
+
+  // Товшсон тэмдэгт бүрийг дараалалд оруулж, хооронд нь морзын завсартай
+  // сонсгоно — түлхүүрээс нэг дор ирсэн үсэг ч ялгаран сонсогдоно.
+  if (g.sound) queueSymbol(symbol, GAME_WPM);
 
   const letter = e.letters[e.index];
   if (symbol !== letter.pattern[g.input.length]) {
     // Буруу товч — мангас тэр дороо дайрна.
+    g.lockedUntil = now + MISTAKE_LOCK_MS;
     recordAttempt(g, false);
     g.known[letter.char].miss += 1;
     g.input = "";
@@ -497,7 +520,6 @@ function pressSymbol(g, now, symbol) {
     return;
   }
 
-  sfx(g, symbol === "." ? 70 : 200, 620);
   g.input += symbol;
   if (g.input.length === letter.pattern.length) completeLetter(g, now);
 }
