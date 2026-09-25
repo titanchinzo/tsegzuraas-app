@@ -3,6 +3,10 @@
 @tailwind utilities;
 
 :root {
+  /* layout.js-д импортолсон Fontsource фонтууд (fallback нь tailwind.config.js-д) */
+  --font-sans: "Inter Variable";
+  --font-mono: "JetBrains Mono Variable";
+  --font-display: "Unbounded Variable";
   --page: 215 9% 96%;
   --surface-card: 0 0% 100%;
   --surface: 215 6% 90%;

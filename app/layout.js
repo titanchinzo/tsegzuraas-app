@@ -1,21 +1,19 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { Inter, JetBrains_Mono, Unbounded } from "next/font/google";
+// Фонтуудыг npm багцаас (Fontsource) өөрсдөө host хийнэ. Өмнө нь
+// next/font/google build бүрд Google Fonts-оос татдаг байсан бөгөөд Google
+// хааяа өргөтгөлгүй файлын URL буцаахад Next 14-ийн loader унаж, Vercel build
+// бүтэлгүйтдэг байв (интернэтгүй локал build ч мөн адил).
+// Inter — үндсэн текст, JetBrains Mono — код, Unbounded — гарчиг (SpaceX-ийн
+// маягийн цэвэрхэн, зузаан геометрик фонт, кирилл дэмждэг). CSS хувьсагчид нь
+// globals.css-ийн :root дээр.
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
+import "@fontsource-variable/unbounded";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NicknameModal from "@/components/NicknameModal";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin", "cyrillic"], variable: "--font-sans" });
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
-// Гарчигт зориулсан цэвэрхэн, зузаан геометрик фонт (SpaceX-ийн маягийн —
-// Exo 2-ийн "тоглоомын" мэдрэмжтэй хурц булантай үсгээс илүү цэвэр) —
-// кирилл дэмждэг тул монгол гарчгууд дээр ч харагдана.
-const unbounded = Unbounded({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-display",
-  weight: ["600", "700", "800"],
-});
 
 export const metadata = {
   title: "Цэг Зураас | tsegzuraas.mn",
@@ -35,11 +33,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
-      <html
-        lang="mn"
-        className={`${inter.variable} ${jetbrainsMono.variable} ${unbounded.variable}`}
-        suppressHydrationWarning
-      >
+      <html lang="mn" suppressHydrationWarning>
         <body className="min-h-screen grid grid-rows-layout font-sans antialiased">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Navbar />
