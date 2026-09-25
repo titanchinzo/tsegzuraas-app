@@ -39,25 +39,70 @@ body {
   border-radius: 4px;
 }
 
-/* Гар халаалтын тоглоомын унаж буй хавтан.
-   Талбайн өндөр 380px, товшилтын шугам доороос 72px буюу дээрээс 308px.
-   Хавтан top:-48px-ээс эхэлдэг тул 308px явахад доод ирмэг нь яг шугам дээр
-   таарна.
+/* Гар халаалт — мангастай тулааны хөдөлгөөнүүд. Цохилт бүрд элементэд шинэ
+   React key өгч анимацыг дахин эхлүүлдэг. Талбай бүхэлдээ доргих нь JS-ээс
+   (Web Animations API) — талбайг key-ээр дахин mount хийвэл санамжийн
+   бүдгэрэх transition тасалддаг. */
+@keyframes monsterBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes monsterSpawn {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes monsterHit {
+  0% { transform: translateX(0); filter: brightness(1); }
+  20% { transform: translateX(-9px) rotate(-5deg); filter: brightness(2.4); }
+  45% { transform: translateX(7px) rotate(3deg); }
+  70% { transform: translateX(-3px); }
+  100% { transform: translateX(0); filter: brightness(1); }
+}
+@keyframes monsterLunge {
+  0% { transform: scale(1) translateY(0); }
+  35% { transform: scale(1.4) translateY(34px); }
+  100% { transform: scale(1) translateY(0); }
+}
+@keyframes monsterDie {
+  to { transform: scale(0.2) rotate(30deg); opacity: 0; }
+}
+@keyframes flashOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes floatUp {
+  0% { opacity: 0; transform: translate(-50%, 8px); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -38px); }
+}
+@keyframes burnPulse {
+  0%, 100% { box-shadow: inset 0 0 40px 6px rgba(249, 115, 22, 0.35); }
+  50% { box-shadow: inset 0 0 80px 16px rgba(239, 68, 68, 0.5); }
+}
+@keyframes bannerIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  12% { opacity: 1; transform: scale(1.04); }
+  20% { transform: scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
 
-   Хавтан шугам дээр зогсдоггүй, цааш өнгөрч бүдгэрнэ: товшилтын цонх
-   хаагдтал зогсоовол дараагийн хавтан ирээд дээр нь давхарладаг байв.
-   --fall-distance-ийг тухайн хавтангийн хурдад тааруулж JS-ээс өгнө. */
-@keyframes tileFall {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  88% {
-    opacity: 1;
-  }
-  to {
-    transform: translateY(var(--fall-distance, 308px));
-    opacity: 0;
+.anim-bob { animation: monsterBob 2.4s ease-in-out infinite; }
+.anim-spawn { animation: monsterSpawn 0.35s ease-out; }
+.anim-hit { animation: monsterHit 0.35s ease-out; }
+.anim-lunge { animation: monsterLunge 0.45s ease-in-out; }
+.anim-die { animation: monsterDie 0.6s ease-in forwards; }
+.anim-flash { animation: flashOut 0.45s ease-out forwards; }
+.anim-float { animation: floatUp 1s ease-out forwards; }
+.anim-burn { animation: burnPulse 0.9s ease-in-out infinite; }
+.anim-banner { animation: bannerIn ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-bob,
+  .anim-hit,
+  .anim-lunge,
+  .anim-burn {
+    animation: none;
   }
 }
 
