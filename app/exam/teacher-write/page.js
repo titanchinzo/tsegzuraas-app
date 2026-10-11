@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { REVERSE_MORSE_MAP, MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
 import { queueSymbol } from "@/lib/audio";
+import { morseSymbolFromKey } from "@/lib/keyboard";
 import { Circle, Minus } from "lucide-react";
 import ResultPanel from "@/components/ResultPanel";
 
@@ -51,6 +52,10 @@ export default function TeacherWriteExamPage() {
         return;
       }
       const nextChars = data.text.split("");
+      if (!nextChars.some(isEncodable)) {
+        setError("Энэ шалгалтын текстэд морзоор бичих тэмдэгт алга. Багшдаа хандана уу.");
+        return;
+      }
       setChars(nextChars);
       setCurrentCharIndex(nextEncodableIndex(nextChars, 0));
       setStartedAt(Date.now());
@@ -88,7 +93,10 @@ export default function TeacherWriteExamPage() {
         const finalInput = morseInputRef.current;
         const decoded = REVERSE_MORSE_MAP[finalInput] || "?";
         const expected = chars[currentCharIndex];
-        const correct = decoded === expected;
+        // Кодыг шууд тулгана. Буцаан тайлбал кирилл "А" (".-") латин "A"
+        // болж тайлагдаад зөв бичсэн ч буруу гэж тооцогддог байв (Ү/Ю ч мөн
+        // ижил кодтой).
+        const correct = finalInput === MORSE_MAP[expected];
         const committedIndex = currentCharIndex;
 
         setCharResults((r) => {
@@ -130,13 +138,10 @@ export default function TeacherWriteExamPage() {
     if (!chars || finalResult) return;
 
     function handleKeyDown(e) {
-      if (e.key === "q" || e.key === "Q" || e.key === ".") {
-        e.preventDefault();
-        addSymbol(".");
-      } else if (e.key === "w" || e.key === "W" || e.key === "-") {
-        e.preventDefault();
-        addSymbol("-");
-      }
+      const symbol = morseSymbolFromKey(e);
+      if (!symbol) return;
+      e.preventDefault();
+      addSymbol(symbol);
     }
 
     window.addEventListener("keydown", handleKeyDown);

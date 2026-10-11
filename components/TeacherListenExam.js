@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { playMorseSequence } from "@/lib/audio";
 import { textToMorse } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
+import { isTextField } from "@/lib/keyboard";
 
 /**
  * Багшийн Listen шалгалт: бүтэн текстийг 5-тэмдэгтийн бүлгүүдэд хуваан,
@@ -63,22 +64,32 @@ export default function TeacherListenExam({ groups, wpm, frequency, secondsPerGr
     [currentGroup, groupIndex, groups.length, onComplete]
   );
 
+  // Тоглуулах хугацааг (ms) буцаана.
   const playCurrent = useCallback(() => {
-    playMorseSequence(textToMorse(currentGroup), wpm, { frequency });
+    return playMorseSequence(textToMorse(currentGroup), wpm, { frequency });
   }, [currentGroup, wpm, frequency]);
 
-  // Шинэ бүлэг эхлэх бүрд тоглуулж, тоолуур эхлүүлнэ.
+  // Шинэ бүлэг эхлэх бүрд тоглуулж, дуу дууссаны дараа тоолуур эхлүүлнэ.
+  // Өмнө нь тоолуур дуутай зэрэг эхэлдэг байсан тул удаан хурд эсвэл урт
+  // кодтой бүлэгт дуу дуусахаас өмнө хугацаа дуусч, бичих боломж олддоггүй байв.
   useEffect(() => {
     advancedRef.current = false;
     setTyped("");
     setTimeLeft(secondsPerGroup);
-    playCurrent();
+    const playMs = playCurrent();
     inputRef.current?.focus();
 
-    const tick = setInterval(() => {
-      setTimeLeft((t) => Math.max(0, t - 0.1));
-    }, 100);
-    return () => clearInterval(tick);
+    let tick = null;
+    // playMorseSequence дууг 0.1 секундын дараа эхлүүлдэг.
+    const startTimer = setTimeout(() => {
+      tick = setInterval(() => {
+        setTimeLeft((t) => Math.max(0, t - 0.1));
+      }, 100);
+    }, playMs + 100);
+    return () => {
+      clearTimeout(startTimer);
+      clearInterval(tick);
+    };
     // groupIndex өөрчлөгдөх бүрд л дахин эхлүүлнэ.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupIndex]);
@@ -93,6 +104,7 @@ export default function TeacherListenExam({ groups, wpm, frequency, secondsPerGr
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key !== "Enter") return;
+      if (isTextField(e.target) && e.target !== inputRef.current) return;
       e.preventDefault();
       playCurrent();
       inputRef.current?.focus();

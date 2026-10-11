@@ -51,7 +51,7 @@ export default function HomePage() {
           <FeatureCard
             icon="⌨️"
             title="Write"
-            desc="Хамгаа/тоог түлхүүрээр эсвэл гараас (Q/W) бичих дадлага."
+            desc="Үсэг, тоог түлхүүрээр эсвэл гараас (Q/W) бичих дадлага."
             href="/write"
           />
           <FeatureCard

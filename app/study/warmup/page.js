@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { MORSE_MAP } from "@/lib/morse";
 import { queueCharGap, queueEffect, queueSymbol } from "@/lib/audio";
+import { isTextField, morseSymbolFromKey } from "@/lib/keyboard";
 
 const MAX_HP = 100;
 const HEAL_PER_LETTER = 5; // зөв бичсэн үсэг бүр амь нөхнө
@@ -700,17 +701,12 @@ export default function WarmupPage() {
 
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      // e.code нь гарын байрлалаас (монгол/англи) үл хамаарна — монгол
-      // байрлалтай үед q/w товч "ф"/"ц" гэж ирдэг тул e.key хангалтгүй.
-      const c = e.code;
-      if (c === "KeyQ" || c === "Period" || c === "NumpadDecimal" || e.key === ".") {
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || isTextField(e.target)) return;
+      const symbol = morseSymbolFromKey(e);
+      if (symbol) {
         e.preventDefault();
-        press(".");
-      } else if (c === "KeyW" || c === "Minus" || c === "NumpadSubtract" || e.key === "-") {
-        e.preventDefault();
-        press("-");
-      } else if (c === "Space" && gRef.current?.phase !== "playing") {
+        press(symbol);
+      } else if (e.code === "Space" && gRef.current?.phase !== "playing") {
         e.preventDefault();
         start();
       }

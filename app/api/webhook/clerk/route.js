@@ -4,6 +4,16 @@ import { connectDB } from "@/lib/db";
 import { isAdminEmail } from "@/lib/auth";
 import User from "@/models/User";
 
+// /api/users/me-ийн pickBestEmail-тэй ижил дараалал: ADMIN_EMAILS-тэй таарсан,
+// дараа нь тэргүүлэх, эцэст нь эхний имэйл. Зөвхөн [0]-ийг авбал хэрэглэгч
+// имэйлээ шинэчлэхэд тэргүүлэх биш имэйл хадгалагдаж болно.
+function pickEmail(data) {
+  const emails = data.email_addresses || [];
+  const adminMatch = emails.find((e) => isAdminEmail(e.email_address));
+  const primary = emails.find((e) => e.id === data.primary_email_address_id);
+  return adminMatch?.email_address || primary?.email_address || emails[0]?.email_address || "";
+}
+
 // Clerk-ээс хэрэглэгч үүсэх/шинэчлэгдэх үед дуудагдана.
 // Clerk Dashboard > Webhooks дээр энэ endpoint-ийг бүртгэж, CLERK_WEBHOOK_SECRET-ийг .env-д тохируулна.
 export async function POST(req) {
@@ -51,30 +61,25 @@ export async function POST(req) {
       data.first_name ||
       (data.email_addresses?.[0]?.email_address?.split("@")[0]) ||
       "Хэрэглэгч";
+    const email = pickEmail(data);
+    const role = isAdminEmail(email) ? "admin" : "student";
 
-    const emails = data.email_addresses || [];
-    const adminMatch = emails.find((e) => isAdminEmail(e.email_address));
-    const primary = emails.find((e) => e.id === data.primary_email_address_id);
-    const email = adminMatch?.email_address || primary?.email_address || emails[0]?.email_address || "";
-    const role = adminMatch ? "admin" : "student";
-
+    // nickname/role-г зөвхөн шинээр үүсгэхэд л онооно. Хэрэглэгч /api/users/me-ээр
+    // аль хэдийн үүсч, хоч нэрээ сонгосны дараа (эсвэл Admin эрхийг нь өөрчилсний
+    // дараа) webhook хоцорч ирэх, Svix дахин илгээх үед тэдгээрийг дарж
+    // бичдэг байв.
     await User.findOneAndUpdate(
       { clerkId: data.id },
       {
-        clerkId: data.id,
-        nickname,
-        email,
-        role,
+        $set: { email },
+        $setOnInsert: { clerkId: data.id, nickname, role },
       },
       { upsert: true, new: true }
     );
   }
 
   if (eventType === "user.updated") {
-    await User.findOneAndUpdate(
-      { clerkId: data.id },
-      { email: data.email_addresses?.[0]?.email_address || "" }
-    );
+    await User.findOneAndUpdate({ clerkId: data.id }, { email: pickEmail(data) });
   }
 
   if (eventType === "user.deleted") {

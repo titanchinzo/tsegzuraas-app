@@ -1,3 +1,5 @@
+import ContactForm from "@/components/ContactForm";
+
 export default function Footer() {
   return (
     <footer className="bg-brand-darker text-white mt-16">
@@ -42,21 +44,7 @@ export default function Footer() {
 
         <div>
           <h3 className="text-xs font-bold uppercase tracking-[0.2em] mb-3 text-white/50">Захидал илгээх</h3>
-          <form className="flex flex-col gap-2.5">
-            <input
-              type="email"
-              placeholder="Таны и-мэйл"
-              className="px-3.5 py-2 rounded-md text-slate-900 bg-white/95 border border-white/10 placeholder:text-slate-400 focus:bg-white focus-visible:outline-white/60 transition-colors text-sm"
-            />
-            <textarea
-              placeholder="Зурвас..."
-              rows={2}
-              className="px-3.5 py-2 rounded-md text-slate-900 bg-white/95 border border-white/10 placeholder:text-slate-400 focus:bg-white focus-visible:outline-white/60 transition-colors text-sm resize-none"
-            />
-            <button type="submit" className="btn-accent w-fit !px-4 !py-2">
-              Илгээх
-            </button>
-          </form>
+          <ContactForm />
         </div>
       </div>
 

@@ -32,7 +32,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    // Нэвтрэх/бүртгүүлэх хуудсыг энд тогтооно. Vercel-ийн env-д
+    // NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-in гэж тохируулагдсан тул бүртгүүлэх
+    // холбоос нэвтрэх хуудас руу буцаж эргэлддэг байв.
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
       <html lang="mn" suppressHydrationWarning>
         <body className="min-h-screen grid grid-rows-layout font-sans antialiased">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

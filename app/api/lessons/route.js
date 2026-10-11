@@ -31,11 +31,11 @@ export async function GET() {
   return Response.json({ lessons });
 }
 
-// POST /api/lessons - Багш шинэ хичээл (видео) оруулах
+// POST /api/lessons - Багш (эсвэл Admin) шинэ хичээл (видео) оруулах
 export async function POST(req) {
   let user;
   try {
-    user = await requireRole(["teacher"]);
+    user = await requireRole(["teacher", "admin"]);
   } catch (err) {
     return Response.json({ error: err.message }, { status: err.status || 500 });
   }

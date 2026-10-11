@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   let user;
   try {
-    user = await requireRole(["teacher"]);
+    user = await requireRole(["teacher", "admin"]);
   } catch (err) {
     return Response.json({ error: err.message }, { status: err.status || 500 });
   }
@@ -22,11 +22,11 @@ export async function GET() {
   return Response.json({ questions });
 }
 
-// POST /api/exam/questions - Багш шалгалтын асуулт оруулах
+// POST /api/exam/questions - Багш (эсвэл Admin) шалгалтын асуулт оруулах
 export async function POST(req) {
   let user;
   try {
-    user = await requireRole(["teacher"]);
+    user = await requireRole(["teacher", "admin"]);
   } catch (err) {
     return Response.json({ error: err.message }, { status: err.status || 500 });
   }

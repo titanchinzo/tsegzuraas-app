@@ -4,11 +4,11 @@ import ExamQuestion from "@/models/ExamQuestion";
 
 export const dynamic = "force-dynamic";
 
-// DELETE /api/exam/questions/:id - Асуулт устгах (зөвхөн эзэмшигч Багш)
+// DELETE /api/exam/questions/:id - Асуулт устгах (эзэмшигч Багш эсвэл Admin)
 export async function DELETE(req, { params }) {
   let user;
   try {
-    user = await requireRole(["teacher"]);
+    user = await requireRole(["teacher", "admin"]);
   } catch (err) {
     return Response.json({ error: err.message }, { status: err.status || 500 });
   }
@@ -18,7 +18,7 @@ export async function DELETE(req, { params }) {
   if (!question) {
     return Response.json({ error: "Асуулт олдсонгүй" }, { status: 404 });
   }
-  if (String(question.teacherId) !== String(user._id)) {
+  if (user.role !== "admin" && String(question.teacherId) !== String(user._id)) {
     return Response.json({ error: "Энэ асуултыг устгах эрхгүй" }, { status: 403 });
   }
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Minus, Delete, Eye, EyeOff } from "lucide-react";
 import { MORSE_MAP } from "@/lib/morse";
 import { queueSymbol } from "@/lib/audio";
+import { isTextField, morseSymbolFromKey } from "@/lib/keyboard";
 
 // Автоматаар илгээх завсар. Морзын стандарт тэмдэгт хоорондын завсар нь
 // 3 нэгж боловч товч дарж кодлоход тэр нь хэт богино тул 12 нэгж авав.
@@ -118,14 +119,12 @@ export default function MorseEncodeTrainer({
 
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.repeat) return;
+      if (e.repeat || isTextField(e.target)) return;
+      const symbol = morseSymbolFromKey(e);
       const k = e.key;
-      if (k === "q" || k === "Q" || k === ".") {
+      if (symbol) {
         e.preventDefault();
-        addSymbol(".");
-      } else if (k === "w" || k === "W" || k === "-") {
-        e.preventDefault();
-        addSymbol("-");
+        addSymbol(symbol);
       } else if (k === "Backspace") {
         e.preventDefault();
         clearInput();

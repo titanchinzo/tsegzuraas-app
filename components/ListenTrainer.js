@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { playMorseSequence } from "@/lib/audio";
 import { buildAttemptResult } from "@/lib/scoring";
+import { isTextField } from "@/lib/keyboard";
 
 /**
  * Listen дадлага/шалгалтын нэг үений компонент.
@@ -62,6 +63,8 @@ export default function ListenTrainer({ target, morse, onComplete, fixedWpm, fix
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key !== "Enter" || finished) return;
+      // Өөр талбарт (нэвтрэх цонх, footer) бичиж байхад Enter-ийг булаахгүй.
+      if (isTextField(e.target) && e.target !== inputRef.current) return;
       e.preventDefault();
       handlePlay();
       inputRef.current?.focus();

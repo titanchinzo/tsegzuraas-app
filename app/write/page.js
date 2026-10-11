@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { randomChars, REVERSE_MORSE_MAP } from "@/lib/morse";
 import { queueSymbol } from "@/lib/audio";
+import { morseSymbolFromKey } from "@/lib/keyboard";
 import { PenTool, RotateCcw, ArrowRight, Minus, Circle, Check, X } from "lucide-react";
 import Link from "next/link";
 
@@ -75,13 +76,10 @@ export default function WritePracticePage() {
     if (!started || roundComplete) return;
 
     function handleKeyDown(e) {
-      if (e.key === "q" || e.key === "Q" || e.key === ".") {
-        e.preventDefault();
-        addSymbol(".");
-      } else if (e.key === "w" || e.key === "W" || e.key === "-") {
-        e.preventDefault();
-        addSymbol("-");
-      }
+      const symbol = morseSymbolFromKey(e);
+      if (!symbol) return;
+      e.preventDefault();
+      addSymbol(symbol);
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -278,11 +276,9 @@ export default function WritePracticePage() {
                     <RotateCcw className="h-4 w-4" />
                     Шинэ үе
                   </button>
-                  <Link href="/exam/write">
-                    <button className="btn-accent gap-2">
-                      Шалгалт өгөх
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
+                  <Link href="/exam/score" className="btn-accent gap-2">
+                    Шалгалт өгөх
+                    <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
               </div>

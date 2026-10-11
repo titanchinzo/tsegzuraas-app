@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { groupChars } from "@/lib/morse";
+import { groupChars, MORSE_MAP } from "@/lib/morse";
 import TeacherListenExam from "@/components/TeacherListenExam";
 import ResultPanel from "@/components/ResultPanel";
 
@@ -26,7 +26,17 @@ export default function TeacherListenExamPage() {
         setError(data.error || "Шалгалт ачаалахад алдаа гарлаа. Дахин оролдоно уу.");
         return;
       }
-      setGroups(groupChars(data.text, 5));
+      // Морзын кодгүй тэмдэгт (Ө, ";" г.м) дуугардаггүй ч бүлэгт үлдвэл
+      // хэзээ ч зөв бичих боломжгүй болно — Teacher Write шиг алгасна.
+      const playable = data.text
+        .split("")
+        .filter((ch) => MORSE_MAP[ch])
+        .join("");
+      if (!playable) {
+        setError("Энэ шалгалтын текстэд морзоор илэрхийлэх тэмдэгт алга. Багшдаа хандана уу.");
+        return;
+      }
+      setGroups(groupChars(playable, 5));
     });
 
     fetch("/api/exam/settings?scope=teacher")

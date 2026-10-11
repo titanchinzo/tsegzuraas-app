@@ -8,11 +8,15 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 // (spec §9 Security).
 const isProtectedPage = createRouteMatcher(["/admin(.*)"]);
 
-export default clerkMiddleware((auth, req) => {
-  if (isProtectedPage(req)) {
-    auth().protect();
-  }
-});
+export default clerkMiddleware(
+  (auth, req) => {
+    if (isProtectedPage(req)) {
+      auth().protect();
+    }
+  },
+  // layout.js-ийн ClerkProvider-тэй ижил — env-ээс хамаарахгүй.
+  { signInUrl: "/sign-in", signUpUrl: "/sign-up" }
+);
 
 export const config = {
   matcher: [

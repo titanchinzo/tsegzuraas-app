@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { REVERSE_MORSE_MAP } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
 import { queueSymbol } from "@/lib/audio";
+import { morseSymbolFromKey } from "@/lib/keyboard";
 import { Circle, Minus, Check, X } from "lucide-react";
 import ListenTrainer from "@/components/ListenTrainer";
 import ResultPanel from "@/components/ResultPanel";
@@ -146,13 +147,10 @@ function WriteExamPanel() {
     if (!chars.length || lastResult) return;
 
     function handleKeyDown(e) {
-      if (e.key === "q" || e.key === "Q" || e.key === ".") {
-        e.preventDefault();
-        addSymbol(".");
-      } else if (e.key === "w" || e.key === "W" || e.key === "-") {
-        e.preventDefault();
-        addSymbol("-");
-      }
+      const symbol = morseSymbolFromKey(e);
+      if (!symbol) return;
+      e.preventDefault();
+      addSymbol(symbol);
     }
 
     window.addEventListener("keydown", handleKeyDown);
