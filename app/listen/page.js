@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import ListenTrainer from "@/components/ListenTrainer";
 import ResultPanel from "@/components/ResultPanel";
+import AlphabetToggle, { MongolTypingHint } from "@/components/AlphabetToggle";
+import useAlphabet from "@/lib/useAlphabet";
 
 export default function ListenPracticePage() {
   const { isLoaded, isSignedIn } = useAuth();
+  const [alphabet, setAlphabet, alphabetReady] = useAlphabet();
+  const requestRef = useRef(0);
   const [round, setRound] = useState(null); // { text, morse }
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null); // { text, needsSignIn }
@@ -15,8 +19,11 @@ export default function ListenPracticePage() {
   // болгож, ListenTrainer-т target=undefined очоод хуудас бүхэлдээ унадаг байв.
   const loadNext = useCallback(async () => {
     setResult(null);
-    const res = await fetch("/api/practice/listen");
+    // Горимыг хурдан солиход хуучин хүсэлтийн хариу шинийг дарахгүй.
+    const id = ++requestRef.current;
+    const res = await fetch(`/api/practice/listen?alphabet=${alphabet}`);
     const data = await res.json().catch(() => ({}));
+    if (id !== requestRef.current) return;
     if (!res.ok || !data.text) {
       setRound(null);
       setError(
@@ -28,12 +35,13 @@ export default function ListenPracticePage() {
     }
     setError(null);
     setRound(data);
-  }, []);
+  }, [alphabet]);
 
-  // Нэвтэрсэн даруйд (modal-аар) хуудсыг сэргээхгүйгээр дахин ачаална.
+  // Нэвтэрсэн даруйд (modal-аар) эсвэл горим солиход хуудсыг сэргээхгүйгээр
+  // дахин ачаална.
   useEffect(() => {
-    if (isLoaded) loadNext();
-  }, [isLoaded, isSignedIn, loadNext]);
+    if (isLoaded && alphabetReady) loadNext();
+  }, [isLoaded, isSignedIn, alphabetReady, loadNext]);
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
@@ -42,6 +50,11 @@ export default function ListenPracticePage() {
         <p className="page-subtitle">
           Санамсаргүй сонгосон 5 тэмдэгтийн морзын дууг сонсоод бичнэ үү.
         </p>
+      </div>
+
+      <div className="space-y-2">
+        <AlphabetToggle value={alphabet} onChange={setAlphabet} />
+        <MongolTypingHint alphabet={alphabet} />
       </div>
 
       {error && (

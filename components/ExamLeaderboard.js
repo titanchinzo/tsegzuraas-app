@@ -62,9 +62,14 @@ function Row({ rank, nickname, score, highlight }) {
  * Шалгалтын хуудасны буланд харагдах авсаархан дүнгийн самбар.
  *
  * refreshKey өөрчлөгдөх бүрд дахин татна — шалгалт дуусаад шинэ байраа
- * шууд харуулахад хэрэгтэй.
+ * шууд харуулахад хэрэгтэй. alphabet: тухайн горимын (english/mongol) жагсаалт.
  */
-export default function ExamLeaderboard({ type = "total", refreshKey = 0, limit = 5 }) {
+export default function ExamLeaderboard({
+  type = "total",
+  alphabet = "english",
+  refreshKey = 0,
+  limit = 5,
+}) {
   const [board, setBoard] = useState(null);
   const [failed, setFailed] = useState(false);
 
@@ -72,7 +77,7 @@ export default function ExamLeaderboard({ type = "total", refreshKey = 0, limit 
     let cancelled = false;
     setFailed(false);
 
-    fetch("/api/scores/leaderboard")
+    fetch(`/api/scores/leaderboard?alphabet=${alphabet}`)
       .then((r) => {
         if (!r.ok) throw new Error("leaderboard unavailable");
         return r.json();
@@ -87,12 +92,13 @@ export default function ExamLeaderboard({ type = "total", refreshKey = 0, limit 
     return () => {
       cancelled = true;
     };
-  }, [type, refreshKey]);
+  }, [type, alphabet, refreshKey]);
 
   const header = (
     <h2 className="mb-3 flex items-center gap-1.5 text-sm font-bold text-brand-darker">
       <Trophy className="h-4 w-4 text-accent" />
       {TITLES[type] || TITLES.total}
+      <span className="font-medium text-ink/40">· {alphabet === "mongol" ? "Монгол" : "English"}</span>
     </h2>
   );
 

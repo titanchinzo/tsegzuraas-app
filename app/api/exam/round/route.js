@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import { randomChars, formatInGroups, CATEGORIES, textToMorse } from "@/lib/morse";
+import { randomChars, formatInGroups, charPool, cleanAlphabet, textToMorse } from "@/lib/morse";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/exam/round?type=write|listen
+// GET /api/exam/round?type=write|listen&alphabet=english|mongol
 // Write/Listen Exam (rank/leaderboard-той, багшаас үл хамаарах) -ийн нэг
 // үений random текст үүсгэнэ. Listen нь радио дуудлагын хэвшлээр (Morse
 // Runner шиг) 5-аар бүлэглэгдэнэ. Багшийн өөрийн шалгалт (roster-оор
@@ -20,7 +20,7 @@ export async function GET(req) {
     return Response.json({ error: "type=write эсвэл listen байх ёстой" }, { status: 400 });
   }
 
-  const pool = CATEGORIES.english.concat(CATEGORIES.numbers);
+  const pool = charPool(cleanAlphabet(searchParams.get("alphabet")));
 
   if (type === "listen") {
     const groupCount = 2 + Math.floor(Math.random() * 2); // 2-3 бүлэг

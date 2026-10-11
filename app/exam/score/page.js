@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { REVERSE_MORSE_MAP } from "@/lib/morse";
+import { MORSE_MAP, decodeMorse } from "@/lib/morse";
 import { calcWPM } from "@/lib/scoring";
 import { queueSymbol } from "@/lib/audio";
 import { morseSymbolFromKey } from "@/lib/keyboard";
@@ -9,6 +9,8 @@ import { Circle, Minus, Check, X } from "lucide-react";
 import ListenTrainer from "@/components/ListenTrainer";
 import ResultPanel from "@/components/ResultPanel";
 import ExamLeaderboard from "@/components/ExamLeaderboard";
+import AlphabetToggle, { MongolTypingHint } from "@/components/AlphabetToggle";
+import useAlphabet from "@/lib/useAlphabet";
 
 const TOTAL_ROUNDS = 5;
 const GAP_MS = 1500;
@@ -16,12 +18,12 @@ const KEY_WPM = 20; // Товшсон цэг/зураасны дууны хур�
 
 // Шалгалтын агуулга (зүүн) + дүнгийн самбар (баруун булан). lg-ээс доош
 // самбар нь агуулгын доор давхарлана.
-function ExamLayout({ type, refreshKey, children }) {
+function ExamLayout({ type, alphabet, refreshKey, children }) {
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 lg:flex-row lg:items-start">
       <div className="min-w-0 flex-1 space-y-6">{children}</div>
       <aside className="lg:sticky lg:top-24 lg:w-64 lg:shrink-0">
-        <ExamLeaderboard type={type} refreshKey={refreshKey} />
+        <ExamLeaderboard type={type} alphabet={alphabet} refreshKey={refreshKey} />
       </aside>
     </div>
   );
@@ -32,33 +34,50 @@ function ExamLayout({ type, refreshKey, children }) {
 // шалгалттай огт хамааралгүй).
 export default function ScorePage() {
   const [tab, setTab] = useState("write");
+  const [alphabet, setAlphabet, alphabetReady] = useAlphabet();
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="page-title">Score</h1>
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={() => setTab("write")}
-            className={tab === "write" ? "segmented-btn-active" : "segmented-btn-inactive"}
-          >
-            Write Score
-          </button>
-          <button
-            onClick={() => setTab("listen")}
-            className={tab === "listen" ? "segmented-btn-active" : "segmented-btn-inactive"}
-          >
-            Listen Score
-          </button>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTab("write")}
+              className={tab === "write" ? "segmented-btn-active" : "segmented-btn-inactive"}
+            >
+              Write Score
+            </button>
+            <button
+              onClick={() => setTab("listen")}
+              className={tab === "listen" ? "segmented-btn-active" : "segmented-btn-inactive"}
+            >
+              Listen Score
+            </button>
+          </div>
+          <span aria-hidden className="hidden h-6 w-px bg-surface sm:block" />
+          {/* Горим тус бүр өөрийн оноо, жагсаалттай. Горим солиход key-ээр
+              шалгалтыг эхнээс нь эхлүүлнэ. */}
+          <AlphabetToggle value={alphabet} onChange={setAlphabet} />
         </div>
+        {tab === "listen" && alphabet === "mongol" && (
+          <div className="mt-2">
+            <MongolTypingHint alphabet={alphabet} />
+          </div>
+        )}
       </div>
 
-      {tab === "write" ? <WriteExamPanel /> : <ListenExamPanel />}
+      {alphabetReady &&
+        (tab === "write" ? (
+          <WriteExamPanel key={`write-${alphabet}`} alphabet={alphabet} />
+        ) : (
+          <ListenExamPanel key={`listen-${alphabet}`} alphabet={alphabet} />
+        ))}
     </div>
   );
 }
 
-function WriteExamPanel() {
+function WriteExamPanel({ alphabet }) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [chars, setChars] = useState([]);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
@@ -74,7 +93,7 @@ function WriteExamPanel() {
 
   const loadRound = useCallback(async () => {
     setLastResult(null);
-    const res = await fetch("/api/exam/round?type=write");
+    const res = await fetch(`/api/exam/round?type=write&alphabet=${alphabet}`);
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) {
       setError("Шалгалт өгөхийн тулд эхлээд нэвтэрнэ үү.");
@@ -90,7 +109,7 @@ function WriteExamPanel() {
     setMorseInput("");
     setCharResults([]);
     setRoundStartedAt(Date.now());
-  }, []);
+  }, [alphabet]);
 
   useEffect(() => {
     loadRound();
@@ -111,9 +130,10 @@ function WriteExamPanel() {
 
       gapTimerRef.current = setTimeout(() => {
         const finalInput = morseInputRef.current;
-        const decoded = REVERSE_MORSE_MAP[finalInput] || "?";
         const expected = chars[currentCharIndex];
-        const correct = decoded === expected;
+        // Кодыг шууд тулгана — кирилл "А" буцаан тайлбал латин "A" болдог.
+        const correct = finalInput === MORSE_MAP[expected];
+        const decoded = correct ? expected : decodeMorse(finalInput, alphabet);
 
         setCharResults((r) => {
           const nextResults = [...r, { char: expected, input: finalInput, decoded, correct }];
@@ -140,7 +160,7 @@ function WriteExamPanel() {
         setMorseInput("");
       }, GAP_MS);
     },
-    [chars, currentCharIndex, lastResult, roundStartedAt]
+    [chars, currentCharIndex, lastResult, roundStartedAt, alphabet]
   );
 
   useEffect(() => {
@@ -165,7 +185,7 @@ function WriteExamPanel() {
       const res = await fetch("/api/exam/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "write", attempts: next }),
+        body: JSON.stringify({ type: "write", alphabet, attempts: next }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -191,7 +211,7 @@ function WriteExamPanel() {
 
   if (finalResult) {
     return (
-      <ExamLayout type="write" refreshKey={1}>
+      <ExamLayout type="write" alphabet={alphabet} refreshKey={1}>
         <div className="space-y-5 text-center animate-fade-in">
           <p className="text-4xl">🏁</p>
           <h2 className="text-xl font-bold text-brand-darker">Шалгалт дууслаа!</h2>
@@ -217,7 +237,7 @@ function WriteExamPanel() {
   }
 
   return (
-    <ExamLayout type="write" refreshKey={0}>
+    <ExamLayout type="write" alphabet={alphabet} refreshKey={0}>
       <div className="flex items-center gap-3">
         <div className="h-2 flex-1 rounded-full bg-surface overflow-hidden">
           <div
@@ -328,7 +348,7 @@ function WriteExamPanel() {
   );
 }
 
-function ListenExamPanel() {
+function ListenExamPanel({ alphabet }) {
   const [roundIndex, setRoundIndex] = useState(0);
   const [round, setRound] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -339,7 +359,7 @@ function ListenExamPanel() {
 
   const loadRound = useCallback(async () => {
     setLastResult(null);
-    const res = await fetch("/api/exam/round?type=listen");
+    const res = await fetch(`/api/exam/round?type=listen&alphabet=${alphabet}`);
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) {
       setError("Шалгалт өгөхийн тулд эхлээд нэвтэрнэ үү.");
@@ -350,7 +370,7 @@ function ListenExamPanel() {
       return;
     }
     setRound(data);
-  }, []);
+  }, [alphabet]);
 
   useEffect(() => {
     loadRound();
@@ -369,7 +389,7 @@ function ListenExamPanel() {
       const res = await fetch("/api/exam/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "listen", attempts: next }),
+        body: JSON.stringify({ type: "listen", alphabet, attempts: next }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -396,7 +416,7 @@ function ListenExamPanel() {
 
   if (finalResult) {
     return (
-      <ExamLayout type="listen" refreshKey={1}>
+      <ExamLayout type="listen" alphabet={alphabet} refreshKey={1}>
         <div className="space-y-5 text-center animate-fade-in">
           <p className="text-4xl">🏁</p>
           <h2 className="text-xl font-bold text-brand-darker">Шалгалт дууслаа!</h2>
@@ -422,7 +442,7 @@ function ListenExamPanel() {
   }
 
   return (
-    <ExamLayout type="listen" refreshKey={0}>
+    <ExamLayout type="listen" alphabet={alphabet} refreshKey={0}>
       <div className="flex items-center gap-3">
         <div className="h-2 flex-1 rounded-full bg-surface overflow-hidden">
           <div

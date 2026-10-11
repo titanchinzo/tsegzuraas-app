@@ -1,10 +1,11 @@
 import { connectDB } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import Score from "@/models/Score";
+import Score, { alphabetFilter } from "@/models/Score";
 import { aggregateExamAttempts } from "@/lib/scoring";
+import { cleanAlphabet } from "@/lib/morse";
 
 // POST /api/exam/submit
-// Body: { type: "write"|"listen", attempts: [{ accuracy, wpm, correct, errors, total, durationSeconds }, ...] (5ш) }
+// Body: { type: "write"|"listen", alphabet: "english"|"mongol", attempts: [{ accuracy, wpm, correct, errors, total, durationSeconds }, ...] (5ш) }
 // Student эрхтэй хэрэглэгч шалгалт өгнө; Admin бас турших зорилгоор өгч болно
 // (spec: Write/Listen Шалгалт - Student only, Admin-д тест хийх эрх нэмэгдсэн).
 export async function POST(req) {
@@ -19,7 +20,8 @@ export async function POST(req) {
     );
   }
 
-  const { type, attempts } = await req.json();
+  const { type, attempts, alphabet: rawAlphabet } = await req.json();
+  const alphabet = cleanAlphabet(rawAlphabet);
   if (!["write", "listen"].includes(type) || !Array.isArray(attempts) || attempts.length === 0) {
     return Response.json({ error: "type, attempts (5 удаагийн) шаардлагатай" }, { status: 400 });
   }
@@ -28,8 +30,13 @@ export async function POST(req) {
 
   await connectDB();
 
-  // Хэрэглэгчийн өмнөх MAX оноотой харьцуулна
-  const prevMax = await Score.findOne({ userId: user._id, type, isMax: true }).sort({
+  // Хэрэглэгчийн тухайн горимын өмнөх MAX оноотой харьцуулна
+  const prevMax = await Score.findOne({
+    userId: user._id,
+    type,
+    isMax: true,
+    ...alphabetFilter(alphabet),
+  }).sort({
     score: -1,
   });
 
@@ -45,6 +52,7 @@ export async function POST(req) {
   const newScore = await Score.create({
     userId: user._id,
     type,
+    alphabet,
     score,
     accuracy,
     wpm,

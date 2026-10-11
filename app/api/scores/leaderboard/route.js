@@ -1,17 +1,24 @@
 import { connectDB } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import Score from "@/models/Score";
+import Score, { alphabetFilter } from "@/models/Score";
 import User from "@/models/User"; // eslint-disable-line no-unused-vars -- populate-д хэрэгтэй
+import { cleanAlphabet } from "@/lib/morse";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/scores/leaderboard - Top 10 (нийт, write, listen тус тусад) + одоогийн хэрэглэгчийн байр
-export async function GET() {
+// GET /api/scores/leaderboard?alphabet=english|mongol - Тухайн горимын Top 10
+// (нийт, write, listen тус тусад) + одоогийн хэрэглэгчийн байр
+export async function GET(req) {
+  const alphabet = cleanAlphabet(new URL(req.url).searchParams.get("alphabet"));
+
   await connectDB();
   const currentUser = await getCurrentUser();
 
   // isMax score-уудыг user тус бүрээр цуглуулна
-  const maxScores = await Score.find({ isMax: true }).populate("userId", "nickname");
+  const maxScores = await Score.find({ isMax: true, ...alphabetFilter(alphabet) }).populate(
+    "userId",
+    "nickname"
+  );
 
   const totals = new Map(); // userId -> { nickname, write, listen, total }
   for (const s of maxScores) {

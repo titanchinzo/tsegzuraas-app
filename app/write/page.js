@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { randomChars, REVERSE_MORSE_MAP } from "@/lib/morse";
+import { randomChars, charPool, decodeMorse, MORSE_MAP } from "@/lib/morse";
 import { queueSymbol } from "@/lib/audio";
 import { morseSymbolFromKey } from "@/lib/keyboard";
 import { PenTool, RotateCcw, ArrowRight, Minus, Circle, Check, X } from "lucide-react";
 import Link from "next/link";
+import useAlphabet from "@/lib/useAlphabet";
+import AlphabetToggle from "@/components/AlphabetToggle";
 
 const ROUND_SIZE = 5;
 const GAP_MS = 1500;
 
 export default function WritePracticePage() {
+  const [alphabet, setAlphabet] = useAlphabet();
   const [wpm, setWpm] = useState(15);
   const [chars, setChars] = useState([]);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
@@ -24,7 +27,7 @@ export default function WritePracticePage() {
   const morseInputRef = useRef("");
 
   const startRound = useCallback(() => {
-    const newChars = randomChars(ROUND_SIZE).split("");
+    const newChars = randomChars(ROUND_SIZE, charPool(alphabet)).split("");
     setChars(newChars);
     setCurrentCharIndex(0);
     morseInputRef.current = "";
@@ -33,7 +36,19 @@ export default function WritePracticePage() {
     setRoundComplete(false);
     setStarted(true);
     setStartTime(Date.now());
-  }, []);
+  }, [alphabet]);
+
+  // Горим солиход явж буй үеийг цуцалж, эхлэх дэлгэц рүү буцна.
+  function changeAlphabet(next) {
+    if (next === alphabet) return;
+    clearTimeout(gapTimerRef.current);
+    morseInputRef.current = "";
+    setMorseInput("");
+    setResults([]);
+    setRoundComplete(false);
+    setStarted(false);
+    setAlphabet(next);
+  }
 
   // Санамж: доорх timeout callback нь setMorseInput-ийн updater дотор өөр
   // setState дуудахаас (setResults г.м) зайлсхийнэ — React 18 dev Strict Mode
@@ -51,9 +66,11 @@ export default function WritePracticePage() {
 
       gapTimerRef.current = setTimeout(() => {
         const finalInput = morseInputRef.current;
-        const decoded = REVERSE_MORSE_MAP[finalInput] || "?";
         const expected = chars[currentCharIndex];
-        const correct = decoded === expected;
+        // Кодыг шууд тулгана — буцаан тайлбал кирилл "А" латин "A" болж
+        // тайлагдана, Ү/Ю ижил кодтой.
+        const correct = finalInput === MORSE_MAP[expected];
+        const decoded = correct ? expected : decodeMorse(finalInput, alphabet);
 
         setResults((r) => [...r, { char: expected, input: finalInput, decoded, correct }]);
 
@@ -68,7 +85,7 @@ export default function WritePracticePage() {
         setMorseInput("");
       }, GAP_MS);
     },
-    [chars, currentCharIndex, roundComplete, wpm]
+    [chars, currentCharIndex, roundComplete, wpm, alphabet]
   );
 
   // Гарын товчлол: q эсвэл . = цэг, w эсвэл - = зураас
@@ -112,21 +129,27 @@ export default function WritePracticePage() {
         <p className="page-subtitle">Тэмдэгтийг морзын кодоор бичих дадлага</p>
       </div>
 
-      {/* Хурдны slider */}
-      <div className="mb-8 card p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-ink/80">Хурд</span>
-          <span className="font-mono text-sm text-accent-dark">{wpm} WPM</span>
+      {/* Горим ба хурдны slider */}
+      <div className="mb-8 card p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-sm font-medium text-ink/80">Тэмдэгт</span>
+          <AlphabetToggle value={alphabet} onChange={changeAlphabet} />
         </div>
-        <input
-          type="range"
-          min={1}
-          max={90}
-          step={1}
-          value={wpm}
-          onChange={(e) => setWpm(Number(e.target.value))}
-          className="w-full accent-accent mt-3"
-        />
+        <div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-ink/80">Хурд</span>
+            <span className="font-mono text-sm text-accent-dark">{wpm} WPM</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={90}
+            step={1}
+            value={wpm}
+            onChange={(e) => setWpm(Number(e.target.value))}
+            className="w-full accent-accent mt-3"
+          />
+        </div>
       </div>
 
       <div className="card p-6">
