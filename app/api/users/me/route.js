@@ -73,9 +73,10 @@ function normalizePhone(raw) {
   return null;
 }
 
-// PATCH /api/users/me - Nickname (анх нэвтрэх үед) эсвэл утасны дугаар
-// шинэчлэх. phone: "" нь алгассан/устгасныг илэрхийлнэ — аль ч тохиолдолд
-// дахин автоматаар асуухгүй.
+// PATCH /api/users/me - Nickname (анх нэвтрэх үед), утасны дугаар, FSA01
+// түлхүүртэй эсэхийг шинэчлэх — зөвхөн ирсэн талбаруудыг. keyInfoAsked: true
+// нь утас/FSA01 цонхонд хариулсныг (алгассан ч) тэмдэглэж, дахин
+// автоматаар асуухгүй болгоно.
 export async function PATCH(req) {
   const { userId } = auth();
   if (!userId) {
@@ -85,6 +86,13 @@ export async function PATCH(req) {
   const body = await req.json();
   const update = {};
 
+  if ("nickname" in body) {
+    if (!body.nickname || !body.nickname.trim()) {
+      return Response.json({ error: "Nickname шаардлагатай" }, { status: 400 });
+    }
+    update.nickname = body.nickname.trim();
+    update.nicknameSet = true;
+  }
   if ("phone" in body) {
     const phone = body.phone ? normalizePhone(body.phone) : "";
     if (phone === null) {
@@ -94,14 +102,17 @@ export async function PATCH(req) {
       );
     }
     update.phone = phone;
-    update.phoneAsked = true;
-  } else {
-    const { nickname } = body;
-    if (!nickname || !nickname.trim()) {
-      return Response.json({ error: "Nickname шаардлагатай" }, { status: 400 });
+  }
+  if ("hasFsa01" in body) {
+    if (![true, false, null].includes(body.hasFsa01)) {
+      return Response.json({ error: "hasFsa01 утга буруу байна" }, { status: 400 });
     }
-    update.nickname = nickname.trim();
-    update.nicknameSet = true;
+    update.hasFsa01 = body.hasFsa01;
+  }
+  if (body.keyInfoAsked === true) update.keyInfoAsked = true;
+
+  if (Object.keys(update).length === 0) {
+    return Response.json({ error: "Шинэчлэх мэдээлэл алга" }, { status: 400 });
   }
 
   await connectDB();

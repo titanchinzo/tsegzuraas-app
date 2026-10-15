@@ -107,7 +107,7 @@ export default function Navbar() {
             <UserButton afterSignOutUrl="/">
               <UserButton.MenuItems>
                 <UserButton.Action
-                  label="Утасны дугаар"
+                  label="Утас ба түлхүүр"
                   labelIcon={<Phone className="h-4 w-4" />}
                   onClick={() => window.dispatchEvent(new Event(OPEN_PHONE_MODAL))}
                 />

@@ -4,49 +4,60 @@ import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
 import useCurrentUser from "@/lib/useCurrentUser";
 
-// Navbar-ын UserButton цэсний "Утасны дугаар" товч энэ event-ээр цонхыг нээнэ.
+// Navbar-ын UserButton цэсний "Утас ба түлхүүр" товч энэ event-ээр цонхыг нээнэ.
 export const OPEN_PHONE_MODAL = "open-phone-modal";
 
-// Нэвтэрсэн хэрэглэгчээс утасны дугаар асуух modal (заавал биш). Хоч нэрээ
-// сонгосны дараа, өмнө нь хариулаагүй (phoneAsked false) бол нэг удаа
-// автоматаар гарна; дараа нь UserButton цэснээс засаж/устгаж болно.
+const FSA01_OPTIONS = [
+  [true, "Тийм"],
+  [false, "Үгүй"],
+];
+
+// Нэвтэрсэн хэрэглэгчээс утасны дугаар болон FSA01 түлхүүртэй эсэхийг асуух
+// modal (заавал биш). Хоч нэрээ сонгосны дараа, өмнө нь хариулаагүй
+// (keyInfoAsked false) бол нэг удаа автоматаар гарна; дараа нь UserButton
+// цэснээс засаж болно.
 export default function PhoneModal() {
   const { profile, isSignedIn, loading } = useCurrentUser();
   // Хадгалсны дараа profile дахин татагдахгүй тул серверийн хариуг энд барина.
   const [saved, setSaved] = useState(null);
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
+  const [phone, setPhone] = useState("");
+  const [hasFsa01, setHasFsa01] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   // Өөр хэрэглэгчээр нэвтэрвэл өмнөхийнх нь хадгалсан утгыг ашиглахгүй.
   const user = saved && saved._id === profile?._id ? saved : profile;
 
+  // Өмнө өгсөн хариултаар бөглөөд нээнэ.
+  function openWith(u) {
+    setPhone(u?.phone || "");
+    setHasFsa01(u?.hasFsa01 ?? null);
+    setError(null);
+    setOpen(true);
+  }
+
   useEffect(() => {
-    if (!loading && isSignedIn && profile?.nicknameSet && !profile.phoneAsked) {
-      setOpen(true);
+    if (!loading && isSignedIn && profile?.nicknameSet && !profile.keyInfoAsked) {
+      openWith(profile);
     }
   }, [loading, isSignedIn, profile]);
 
   useEffect(() => {
-    function handleOpen() {
-      setValue(user?.phone || "");
-      setError(null);
-      setOpen(true);
-    }
+    const handleOpen = () => openWith(user);
     window.addEventListener(OPEN_PHONE_MODAL, handleOpen);
     return () => window.removeEventListener(OPEN_PHONE_MODAL, handleOpen);
   }, [user]);
 
   if (!open || !isSignedIn || !user) return null;
 
-  async function save(phone) {
+  async function save(fields) {
     setSaving(true);
     setError(null);
     const res = await fetch("/api/users/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ ...fields, keyInfoAsked: true }),
     });
     const data = await res.json().catch(() => ({}));
     setSaving(false);
@@ -60,14 +71,14 @@ export default function PhoneModal() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    save(value.trim());
+    save({ phone: phone.trim(), hasFsa01 });
   }
 
-  // Анх асуухад алгасвал дахин асуухгүйн тулд хариултыг хадгална; цэснээс
-  // нээсэн бол зүгээр хаана.
+  // Анх асуухад алгасвал өгөгдлийг өөрчлөхгүйгээр хариулсныг л тэмдэглэж,
+  // дахин асуухгүй; цэснээс нээсэн бол зүгээр хаана.
   function handleSkip() {
-    if (user.phoneAsked) setOpen(false);
-    else save("");
+    if (user.keyInfoAsked) setOpen(false);
+    else save({});
   }
 
   return (
@@ -84,19 +95,41 @@ export default function PhoneModal() {
             Телеграфын түлхүүрийн шинэ загвар гарахад тань руу залгаж мэдэгдье.
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-red-700 text-sm bg-red-50 rounded-lg px-3 py-2">{error}</p>}
           <input
             autoFocus
             type="tel"
             inputMode="tel"
             autoComplete="tel"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="99112233"
             className="input text-center"
             maxLength={20}
           />
+          <div className="space-y-2">
+            <p className="text-sm text-ink/70 text-center">
+              Танд манай зардаг <span className="font-semibold">FSA01</span> түлхүүр байгаа юу?
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {FSA01_OPTIONS.map(([option, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  aria-pressed={hasFsa01 === option}
+                  onClick={() => setHasFsa01(hasFsa01 === option ? null : option)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                    hasFsa01 === option
+                      ? "border-accent bg-accent/15 text-accent-dark"
+                      : "border-surface text-ink/60 hover:border-brand-300"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex gap-2">
             <button
               type="button"
@@ -104,7 +137,7 @@ export default function PhoneModal() {
               disabled={saving}
               className="btn-secondary flex-1"
             >
-              {user.phoneAsked ? "Болих" : "Алгасах"}
+              {user.keyInfoAsked ? "Болих" : "Алгасах"}
             </button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">
               {saving ? "Хадгалж байна..." : "Хадгалах"}

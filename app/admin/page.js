@@ -100,7 +100,13 @@ function UserManagement({ meId }) {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-bold text-brand-darker">Хэрэглэгчид</h2>
+      <div className="flex items-baseline justify-between flex-wrap gap-2">
+        <h2 className="text-lg font-bold text-brand-darker">Хэрэглэгчид</h2>
+        <p className="text-sm text-ink/50">
+          {users.length} хэрэглэгч · утастай {users.filter((u) => u.phone).length} · FSA01-тэй{" "}
+          {users.filter((u) => u.hasFsa01).length}
+        </p>
+      </div>
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -108,6 +114,7 @@ function UserManagement({ meId }) {
               <th className="py-3 px-5 font-medium">Nickname</th>
               <th className="font-medium">И-мэйл</th>
               <th className="font-medium px-5">Утас</th>
+              <th className="font-medium pr-5">FSA01</th>
               <th className="font-medium">Эрх</th>
               <th className="font-medium px-5 text-right">Үйлдэл</th>
             </tr>
@@ -129,6 +136,17 @@ function UserManagement({ meId }) {
                     <a href={`tel:${u.phone}`} className="text-ink/70 hover:text-accent-dark">
                       {u.phone}
                     </a>
+                  ) : (
+                    <span className="text-ink/30">—</span>
+                  )}
+                </td>
+                <td className="pr-5 whitespace-nowrap">
+                  {u.hasFsa01 === true ? (
+                    <span className="rounded-full bg-accent/15 text-accent-dark px-2 py-0.5 text-xs font-semibold">
+                      Тийм
+                    </span>
+                  ) : u.hasFsa01 === false ? (
+                    <span className="text-ink/50">Үгүй</span>
                   ) : (
                     <span className="text-ink/30">—</span>
                   )}
