@@ -64,24 +64,48 @@ export async function GET() {
   return Response.json({ user });
 }
 
-// PATCH /api/users/me - Nickname шинэчлэх (анх нэвтрэх үед)
+// "+976 9911-2233" → "99112233". Гадаад дугаарыг "+"-тэй нь хадгална.
+function normalizePhone(raw) {
+  const compact = String(raw).replace(/[\s\-()]/g, "");
+  const local = compact.match(/^(?:\+?976)?(\d{8})$/);
+  if (local) return local[1];
+  if (/^\+\d{8,15}$/.test(compact)) return compact;
+  return null;
+}
+
+// PATCH /api/users/me - Nickname (анх нэвтрэх үед) эсвэл утасны дугаар
+// шинэчлэх. phone: "" нь алгассан/устгасныг илэрхийлнэ — аль ч тохиолдолд
+// дахин автоматаар асуухгүй.
 export async function PATCH(req) {
   const { userId } = auth();
   if (!userId) {
     return Response.json({ error: "Нэвтрээгүй байна" }, { status: 401 });
   }
 
-  const { nickname } = await req.json();
-  if (!nickname || !nickname.trim()) {
-    return Response.json({ error: "Nickname шаардлагатай" }, { status: 400 });
+  const body = await req.json();
+  const update = {};
+
+  if ("phone" in body) {
+    const phone = body.phone ? normalizePhone(body.phone) : "";
+    if (phone === null) {
+      return Response.json(
+        { error: "Утасны дугаар буруу байна (жишээ нь: 99112233)" },
+        { status: 400 }
+      );
+    }
+    update.phone = phone;
+    update.phoneAsked = true;
+  } else {
+    const { nickname } = body;
+    if (!nickname || !nickname.trim()) {
+      return Response.json({ error: "Nickname шаардлагатай" }, { status: 400 });
+    }
+    update.nickname = nickname.trim();
+    update.nicknameSet = true;
   }
 
   await connectDB();
-  const user = await User.findOneAndUpdate(
-    { clerkId: userId },
-    { nickname: nickname.trim(), nicknameSet: true },
-    { new: true }
-  );
+  const user = await User.findOneAndUpdate({ clerkId: userId }, update, { new: true });
 
   return Response.json({ user });
 }

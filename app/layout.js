@@ -13,6 +13,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NicknameModal from "@/components/NicknameModal";
+import PhoneModal from "@/components/PhoneModal";
 import "./globals.css";
 
 export const metadata = {
@@ -41,6 +42,7 @@ export default function RootLayout({ children }) {
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Navbar />
             <NicknameModal />
+            <PhoneModal />
             <main className="container-page py-8 md:py-12">{children}</main>
             <Footer />
           </ThemeProvider>

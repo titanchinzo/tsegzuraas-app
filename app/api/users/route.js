@@ -16,7 +16,12 @@ export async function GET() {
 
   await connectDB();
   const filter = user.role === "teacher" ? { role: "student" } : {};
-  const users = await User.find(filter, "_id nickname email role createdAt").sort({
+  // Утас, ban-ы төлөвийг зөвхөн Admin харна.
+  const fields =
+    user.role === "admin"
+      ? "_id nickname email phone banned role createdAt"
+      : "_id nickname email role createdAt";
+  const users = await User.find(filter, fields).sort({
     createdAt: -1,
   });
 

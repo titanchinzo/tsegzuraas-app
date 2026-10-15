@@ -17,12 +17,13 @@ export async function GET(req) {
   // isMax score-уудыг user тус бүрээр цуглуулна
   const maxScores = await Score.find({ isMax: true, ...alphabetFilter(alphabet) }).populate(
     "userId",
-    "nickname"
+    "nickname banned"
   );
 
   const totals = new Map(); // userId -> { nickname, write, listen, total }
   for (const s of maxScores) {
-    if (!s.userId) continue;
+    // Устгагдсан болон ban-тай хэрэглэгчийг жагсаалтад оруулахгүй.
+    if (!s.userId || s.userId.banned) continue;
     const key = String(s.userId._id);
     if (!totals.has(key)) {
       totals.set(key, { userId: key, nickname: s.userId.nickname, write: 0, listen: 0 });

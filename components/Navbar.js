@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Phone, Sun } from "lucide-react";
 import {
   SignedIn,
   SignedOut,
@@ -12,6 +12,7 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import useCurrentUser from "@/lib/useCurrentUser";
+import { OPEN_PHONE_MODAL } from "@/components/PhoneModal";
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -103,7 +104,15 @@ export default function Navbar() {
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <UserButton afterSignOutUrl="/" />
+            <UserButton afterSignOutUrl="/">
+              <UserButton.MenuItems>
+                <UserButton.Action
+                  label="Утасны дугаар"
+                  labelIcon={<Phone className="h-4 w-4" />}
+                  onClick={() => window.dispatchEvent(new Event(OPEN_PHONE_MODAL))}
+                />
+              </UserButton.MenuItems>
+            </UserButton>
           </SignedIn>
 
           <button

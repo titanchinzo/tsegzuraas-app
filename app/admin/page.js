@@ -5,7 +5,7 @@ import useCurrentUser from "@/lib/useCurrentUser";
 import ProductAdminForm from "@/components/ProductAdminForm";
 
 export default function AdminPage() {
-  const { role, loading } = useCurrentUser();
+  const { role, loading, profile } = useCurrentUser();
 
   if (loading) return <p className="text-ink/50">Ачааллаж байна...</p>;
   if (role !== "admin") {
@@ -20,7 +20,7 @@ export default function AdminPage() {
   return (
     <div className="space-y-10 animate-fade-in">
       <h1 className="page-title">🛠️ Админ самбар</h1>
-      <UserManagement />
+      <UserManagement meId={profile?._id} />
       <OrderManagement />
       <ProductManagement />
     </div>
@@ -33,7 +33,7 @@ const ROLE_BADGE = {
   student: "bg-surface text-ink/60",
 };
 
-function UserManagement() {
+function UserManagement({ meId }) {
   const [users, setUsers] = useState([]);
   const [saving, setSaving] = useState(null);
 
@@ -60,6 +60,44 @@ function UserManagement() {
     loadUsers();
   }
 
+  // Ban/устгах хүсэлт. Сервер татгалзвал (жишээ нь Admin-ыг ban хийх гэвэл)
+  // шалтгааныг харуулна.
+  async function updateUser(userId, request) {
+    setSaving(userId);
+    const res = await fetch(`/api/users/${userId}`, request);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Алдаа гарлаа.");
+    }
+    setSaving(null);
+    loadUsers();
+  }
+
+  function setBanned(u, banned) {
+    if (
+      banned &&
+      !confirm(`"${u.nickname}" хэрэглэгчийг ban хийх үү? Тэр сайтаас гарч, дахин нэвтэрч чадахгүй болно.`)
+    ) {
+      return;
+    }
+    updateUser(u._id, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ banned }),
+    });
+  }
+
+  function deleteUser(u) {
+    if (
+      !confirm(
+        `"${u.nickname}" хэрэглэгчийг бүр мөсөн устгах уу? Бүртгэл, оноо, шалгалтын түүх нь устах бөгөөд буцаах боломжгүй.`
+      )
+    ) {
+      return;
+    }
+    updateUser(u._id, { method: "DELETE" });
+  }
+
   return (
     <section className="space-y-4">
       <h2 className="text-lg font-bold text-brand-darker">Хэрэглэгчид</h2>
@@ -69,15 +107,33 @@ function UserManagement() {
             <tr className="text-left border-b border-surface text-ink/40">
               <th className="py-3 px-5 font-medium">Nickname</th>
               <th className="font-medium">И-мэйл</th>
-              <th className="font-medium px-5">Эрх</th>
+              <th className="font-medium px-5">Утас</th>
+              <th className="font-medium">Эрх</th>
+              <th className="font-medium px-5 text-right">Үйлдэл</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
               <tr key={u._id} className="border-b border-surface/60 last:border-0">
-                <td className="py-3 px-5 font-medium text-ink/90">{u.nickname}</td>
+                <td className="py-3 px-5 font-medium text-ink/90">
+                  {u.nickname}
+                  {u.banned && (
+                    <span className="ml-2 rounded-full bg-red-50 text-red-600 px-2 py-0.5 text-[10px] font-semibold uppercase">
+                      ban
+                    </span>
+                  )}
+                </td>
                 <td className="text-ink/50">{u.email || "—"}</td>
-                <td className="px-5 py-2.5">
+                <td className="px-5 whitespace-nowrap">
+                  {u.phone ? (
+                    <a href={`tel:${u.phone}`} className="text-ink/70 hover:text-accent-dark">
+                      {u.phone}
+                    </a>
+                  ) : (
+                    <span className="text-ink/30">—</span>
+                  )}
+                </td>
+                <td className="py-2.5">
                   <select
                     value={u.role}
                     onChange={(e) => changeRole(u._id, e.target.value)}
@@ -90,6 +146,29 @@ function UserManagement() {
                     <option value="teacher">teacher</option>
                     <option value="admin">admin</option>
                   </select>
+                </td>
+                <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                  {/* Өөрийгөө болон Admin-ыг ban/устгахыг сервер ч хориглоно. */}
+                  {u._id === meId || u.role === "admin" ? (
+                    <span className="text-ink/30">—</span>
+                  ) : (
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={() => setBanned(u, !u.banned)}
+                        disabled={saving === u._id}
+                        className="text-sm text-ink/60 hover:text-ink font-medium transition-colors disabled:opacity-50"
+                      >
+                        {u.banned ? "Ban цуцлах" : "Ban"}
+                      </button>
+                      <button
+                        onClick={() => deleteUser(u)}
+                        disabled={saving === u._id}
+                        className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors disabled:opacity-50"
+                      >
+                        Устгах
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
