@@ -1,3 +1,41 @@
+import { unstable_cache } from "next/cache";
+import { connectDB } from "@/lib/db";
+import KeyLocation from "@/models/KeyLocation";
+import MongoliaMap from "@/components/MongoliaMap";
+
+// Газрын зурагт асах аймгууд. Нүүр хуудас бүрд DB руу хандахгүйн тулд
+// кэшлэнэ: Admin өөрчлөхөд /api/key-locations "key-locations" tag-ийг
+// шинэчилдэг, өөр замаар (жишээ нь локал серверээс) өөрчилсөн бол 1 минутын
+// дотор шинэчлэгдэнэ.
+const getActiveAimags = unstable_cache(
+  async () => {
+    await connectDB();
+    return KeyLocation.distinct("aimag");
+  },
+  ["key-locations"],
+  { revalidate: 60, tags: ["key-locations"] }
+);
+
+// DB удаан эсвэл унтарсан үед mongoose 30 секунд хүлээдэг — нүүр хуудас
+// тэгж хүлээхгүйн тулд 3 секундээс хэтэрвэл газрын зураг асаалттай аймаггүй
+// харагдана.
+async function loadActiveAimags() {
+  let timer;
+  try {
+    return await Promise.race([
+      getActiveAimags(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("3 секундэд хариу ирсэнгүй")), 3000);
+      }),
+    ]);
+  } catch (err) {
+    console.error("[home] Түлхүүрийн байршлыг татаж чадсангүй:", err.message);
+    return [];
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function KeyIcon() {
   return (
     <span className="flex items-center gap-1">
@@ -7,7 +45,9 @@ function KeyIcon() {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const activeAimags = await loadActiveAimags();
+
   return (
     <div className="space-y-16">
       <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-brand-darker text-white px-6 py-24 md:py-36 text-center">
@@ -40,6 +80,16 @@ export default function HomePage() {
             </a>
           </div>
         </div>
+      </section>
+
+      <section className="space-y-6">
+        <div className="text-center max-w-xl mx-auto">
+          <h2 className="page-title">Манай түлхүүр хаана байна?</h2>
+          <p className="page-subtitle">
+            FSA01 түлхүүрээр морзын код хичээллэж буй газрууд.
+          </p>
+        </div>
+        <MongoliaMap activeAimags={activeAimags} />
       </section>
 
       <section className="space-y-6">

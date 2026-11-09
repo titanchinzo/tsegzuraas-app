@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import useCurrentUser from "@/lib/useCurrentUser";
 import ProductAdminForm from "@/components/ProductAdminForm";
+import KeyLocationChecklist from "@/components/KeyLocationChecklist";
 
 export default function AdminPage() {
   const { role, loading, profile } = useCurrentUser();
@@ -23,6 +24,7 @@ export default function AdminPage() {
       <UserManagement meId={profile?._id} />
       <OrderManagement />
       <ProductManagement />
+      <KeyLocationChecklist />
     </div>
   );
 }
