@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
     // холбоос нэвтрэх хуудас руу буцаж эргэлддэг байв.
     <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
       <html lang="mn" suppressHydrationWarning>
-        <body className="min-h-screen grid grid-rows-layout font-sans antialiased">
+        <body className="min-h-screen grid grid-rows-layout grid-cols-layout font-sans antialiased">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <Navbar />
             <NicknameModal />

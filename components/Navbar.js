@@ -41,14 +41,16 @@ const NAV_LINKS = [
   { href: "/products", label: "Products" },
 ];
 
+// Утсан дээр (360px) лого, Login, цэсний товч нэг мөрөнд багтахаар лого
+// болон зайнууд sm-ээс доош жижиг.
 function Logo() {
   return (
-    <Link href="/" className="flex items-center gap-2 shrink-0">
+    <Link href="/" className="flex items-center gap-1.5 sm:gap-2 shrink-0">
       <span className="flex items-center gap-1">
         <span className="h-2 w-2 rounded-full bg-accent animate-signal-pulse" />
         <span className="h-2 w-4 rounded-full bg-accent" />
       </span>
-      <span className="font-display text-lg font-bold tracking-wide text-white">
+      <span className="font-display text-base sm:text-lg font-bold tracking-normal sm:tracking-wide text-white">
         tsegzuraas<span className="text-accent">.mn</span>
       </span>
     </Link>
@@ -96,11 +98,11 @@ export default function Navbar() {
           })}
         </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           <ThemeToggle />
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="btn-accent !px-3 sm:!px-4 !py-1.5 !text-xs sm:!text-sm !tracking-normal">Login</button>
+              <button className="btn-accent !px-2.5 sm:!px-4 !py-1.5 !text-xs sm:!text-sm !tracking-normal">Login</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>

@@ -43,6 +43,11 @@ module.exports = {
       gridTemplateRows: {
         layout: "auto 1fr auto", // Header / Content / Footer (3/1 structure)
       },
+      gridTemplateColumns: {
+        // Багана дэлгэцийн өргөнтэй тэнцүү: өргөн агуулга (хүснэгт, цэс) бүх
+        // хуудсыг дэлгэцээс өргөн болгож, баруун талыг нь таслахгүй.
+        layout: "minmax(0, 1fr)",
+      },
       boxShadow: {
         soft: "0 1px 2px rgba(15,30,48,0.07), 0 2px 8px rgba(15,30,48,0.07)",
         lift: "0 10px 28px rgba(13,68,94,0.16)",

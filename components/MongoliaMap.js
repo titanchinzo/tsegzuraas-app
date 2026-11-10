@@ -7,8 +7,8 @@ import { MAP_HEIGHT, MAP_WIDTH, REGIONS } from "@/lib/mongoliaMap";
 // Монголын цэгэн (дижитал) газрын зураг, аймгуудын хилтэй. Түлхүүрээр
 // хичээллэж буй (асаалттай) аймгийн нутаг гэрэлтэн анивчина, асаагүй нь
 // тодрохгүй. Аль ч аймаг дээр хулгана аваачихад (утсан дээр товшиход) нэр нь
-// гарна. Хэлбэрүүд JS модульд (кэшлэгдэнэ) байх тул client component —
-// нүүр хуудасны HTML/RSC-д давхардаж орохгүй.
+// гарна. Хэлбэрүүд JS модульд (кэшлэгдэнэ) байх тул RSC payload-д давхардахгүй
+// (SSR HTML-д path-ууд нь нэг удаа орно).
 export default function MongoliaMap({ activeAimags }) {
   const [hovered, setHovered] = useState(null);
   // useId-ийн ":" тэмдэгт url(#...)-д асуудал үүсгэдэг.
@@ -36,7 +36,16 @@ export default function MongoliaMap({ activeAimags }) {
           aria-hidden
         >
           <defs>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
+            {/* Бүдгэрэлт (3σ ≈ 15) Орхон зэрэг жижиг аймгийн хүрээний 20%-иас их тул
+                бүсийг бүх газрын зургаар авна — эс бөгөөс гэрэл дөрвөлжин тасарна. */}
+            <filter
+              id={glowId}
+              filterUnits="userSpaceOnUse"
+              x="0"
+              y="0"
+              width={MAP_WIDTH}
+              height={MAP_HEIGHT}
+            >
               <feGaussianBlur stdDeviation="5" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
@@ -64,6 +73,8 @@ export default function MongoliaMap({ activeAimags }) {
                       : "fill-transparent"
                 }
                 onMouseEnter={() => setHovered(r.key)}
+                // Монголоос гадуур (хүрээн дотор) гарахад тайлбар үлдэхгүй.
+                onMouseLeave={() => setHovered(null)}
                 onClick={() => setHovered(r.key)}
               />
             );
@@ -73,21 +84,26 @@ export default function MongoliaMap({ activeAimags }) {
         {tip && <Tooltip region={tip} lit={activeAimags.includes(tip.key)} />}
       </div>
 
-      <p className="mt-8 text-center text-sm text-white/60">
+      <p className="mt-8 text-center text-sm text-white/60 text-balance">
         {litNames.length === 0
           ? "Газрууд удахгүй асна."
           : `${litNames.length} аймаг, хотод манай түлхүүрээр хичээллэж байна`}
       </p>
+      {/* Нэрс харагдана: гарнаас ашиглагч болон утсан дээр Орхон шиг жижиг
+          аймгийг дарж чадахгүй хүн ч мэдэнэ. */}
       {litNames.length > 0 && (
-        <p className="sr-only">Хичээллэж буй аймаг, хот: {litNames.join(", ")}.</p>
+        <p className="mt-1 text-center text-xs text-white/60 text-balance">
+          {/* Тасрахгүй зураас (U+2011): "Дархан-Уул" мөрийн төгсгөлд хуваагдахгүй. */}
+          {litNames.map((n) => n.replace(/-/g, "\u2011")).join(", ")}
+        </p>
       )}
-      <p className="mt-3 text-right text-[10px] text-white/30">
+      <p className="mt-3 text-right text-[11px] text-white/50">
         Хил:{" "}
         <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"
           rel="noreferrer"
-          className="hover:text-white/60"
+          className="hover:text-white"
         >
           © OpenStreetMap contributors
         </a>
@@ -103,8 +119,9 @@ function Tooltip({ region, lit }) {
   const top = (region.labelY / MAP_HEIGHT) * 100;
   // Самбарын (overflow-hidden) захаас гарч таслагдахгүйн тулд захынхыг тал руу нь тэгшилнэ.
   const horizontal =
-    left < 35 ? "left-0" : left > 65 ? "right-0" : "left-1/2 -translate-x-1/2";
-  const vertical = top < 30 ? "top-full mt-1" : "bottom-full mb-1";
+    left < 35 ? "left-0" : left > 70 ? "right-0" : "left-1/2 -translate-x-1/2";
+  // Зөвхөн хамгийн дээд Хөвсгөл доош гарна — Сэлэнгэ доош гарвал өөрийгөө далдална.
+  const vertical = top < 20 ? "top-full mt-1" : "bottom-full mb-1";
 
   return (
     <div
@@ -119,7 +136,9 @@ function Tooltip({ region, lit }) {
         <span className="block font-bold">{AIMAG_BY_KEY[region.key].name}</span>
         {lit && (
           <span className="block font-semibold text-teal-700">
-            FSA01 түлхүүрээр хичээллэж байна
+            FSA01 түлхүүрээр
+            <br />
+            хичээллэж байна
           </span>
         )}
       </div>
